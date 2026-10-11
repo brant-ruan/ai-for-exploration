@@ -1,0 +1,179 @@
+import { readFile, writeFile, mkdir, rm, cp, stat } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import MarkdownIt from 'markdown-it';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const output = path.join(root, 'dist');
+const { site, topics } = JSON.parse(await readFile(path.join(root, 'site/catalog.json'), 'utf8'));
+const base = (process.env.BASE_PATH ?? site.basePath).replace(/\/$/, '');
+if (base && !/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+$/.test(base)) {
+  throw new Error('BASE_PATH must be empty or a URL path such as /ai-for-exploration');
+}
+const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[char]);
+const url = (file = '') => `${base}/${file}`;
+const kindLabel = (kind) => kind === 'investigation' ? '广度调研' : '深度探索';
+const dateLabel = (date) => date.replaceAll('-', '.');
+const sorted = [...topics].sort((a, b) => (b.updated ?? b.date).localeCompare(a.updated ?? a.date));
+const slugSet = new Set();
+
+for (const topic of topics) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(topic.slug) || slugSet.has(topic.slug)) {
+    throw new Error(`Invalid or duplicate topic slug: ${topic.slug}`);
+  }
+  slugSet.add(topic.slug);
+  if (!['investigation', 'exploration'].includes(topic.kind)) throw new Error(`Invalid kind: ${topic.kind}`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(topic.date)) throw new Error(`Invalid date: ${topic.date}`);
+  for (const key of ['title', 'subtitle', 'summary', 'markdown', 'html']) {
+    if (!topic[key] || typeof topic[key] !== 'string') throw new Error(`Missing ${key} for ${topic.slug}`);
+  }
+  for (const file of [topic.markdown, topic.html, ...(topic.assets ?? [])]) {
+    if (path.isAbsolute(file) || file.split(/[\\/]/).includes('..')) throw new Error(`Invalid topic file: ${file}`);
+    await stat(path.join(root, topic.slug, file));
+  }
+}
+
+const arrow = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const external = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const book = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5h7a3 3 0 0 1 3 3V20a4 4 0 0 0-4-2H4zm16 0h-3a3 3 0 0 0-3 3V20a4 4 0 0 1 4-2h2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+function header(isHome = false) {
+  return `<a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header"><div class="header-inner">
+    <a class="brand" href="${url()}"><span class="brand-mark" aria-hidden="true">[<i>·</i>]</span><span>探索档案<small>ai-for-exploration</small></span></a>
+    <nav aria-label="站点导航"><a href="${isHome ? '#topics' : url('#topics')}">主题档案</a><a class="nav-about" href="${isHome ? '#about' : url('#about')}">关于</a><a class="repo-link" href="${escape(site.repository)}" aria-label="在 GitHub 查看仓库">GitHub ${external}</a></nav>
+  </div></header>`;
+}
+function footer() {
+  return `<footer class="site-footer"><div class="footer-inner"><span>ai-for-exploration <span class="footer-dot">/</span> 持续探索，保留来路</span><a href="${escape(site.repository)}">源文件与修订记录 ${external}</a></div></footer>`;
+}
+function shell({ title, description, body, route = '', className = '' }) {
+  return `<!doctype html>
+<html lang="zh-CN"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="${escape(description)}">
+  <meta name="theme-color" content="#172f44">
+  <title>${escape(title)}</title>
+  <link rel="canonical" href="${escape(site.url + url(route))}">
+  <link rel="icon" type="image/svg+xml" href="${url('assets/favicon.svg')}">
+  <link rel="stylesheet" href="${url('assets/site.css')}">
+  <script src="${url('assets/site.js')}" defer></script>
+</head><body class="${className}">${body}</body></html>`;
+}
+function tags(topic) {
+  return topic.tags.map((tag) => `<span class="tag">${escape(tag)}</span>`).join('');
+}
+function cover(topic) {
+  const facets = topic.facets ?? [{ title: '机制与边界', detail: '理解技术' }, { title: '实践与证据', detail: '连接应用' }, { title: '问题与路径', detail: '继续探索' }];
+  return `<div class="topic-cover" aria-hidden="true"><div class="cover-heading"><span>FIELD NOTES</span><span>${escape(topic.date.slice(0, 4))}</span></div><div class="cover-lines">${facets.map((item, index) => `<div><span class="facet-index">0${index + 1}</span><span><b>${escape(item.title)}</b><small>${escape(item.detail)}</small></span></div>`).join('')}</div><div class="cover-footer">${escape(topic.title.toUpperCase())}<span>↗</span></div></div>`;
+}
+function card(topic, index) {
+  const reportUrl = url(`${topic.slug}/report/`);
+  const htmlUrl = url(`${topic.slug}/${topic.html}`);
+  const terms = [topic.title, topic.subtitle, topic.summary, ...topic.tags].join(' ');
+  return `<article class="topic-card" data-search="${escape(terms)}" data-kind="${topic.kind}">
+    <div class="topic-info"><div class="topic-topline"><span class="topic-index">${String(index + 1).padStart(2, '0')}</span><span>${kindLabel(topic.kind)}</span><span class="meta-divider">/</span><time datetime="${topic.date}">${dateLabel(topic.date)}</time>${topic.updated ? `<span>修订 ${dateLabel(topic.updated)}</span>` : ''}</div>
+    <h3><a href="${reportUrl}">${escape(topic.title)}</a></h3><p class="topic-subtitle">${escape(topic.subtitle)}</p>
+    <p class="topic-summary">${escape(topic.summary)}</p><div class="tags">${tags(topic)}</div>
+    <div class="topic-actions"><a class="button button-primary" href="${htmlUrl}">交互讲解 ${arrow}</a><a class="button button-secondary" href="${reportUrl}">${book} 深度报告</a></div></div>
+    ${cover(topic)}
+  </article>`;
+}
+const kinds = [...new Set(topics.map((topic) => topic.kind))];
+const filters = kinds.length > 1 ? `<div class="topic-filters" aria-label="按探索类型筛选"><button type="button" data-kind-filter="all" aria-pressed="true">全部</button>${kinds.map((kind) => `<button type="button" data-kind-filter="${kind}" aria-pressed="false">${kindLabel(kind)}</button>`).join('')}</div>` : '';
+const home = shell({
+  title: `${site.title} · AI for Exploration`, description: site.description, className: 'home-page',
+  body: `${header(true)}<main id="main" class="home-main">
+    <section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><p class="eyebrow"><span></span> AI FOR EXPLORATION</p><h1 id="hero-title">借助 AI，<br>持续探索与积累。</h1><p class="hero-description">记录人工智能辅助知识管理与探索的尝试。<br>从一个话题的广度调研，到一个问题的深度追问。</p><a class="text-link" href="#topics">浏览主题档案 ${arrow}</a></div>
+    <aside class="reading-modes" aria-label="两种阅读方式"><p class="mode-caption">同一个主题，两条理解路径</p><div class="mode-row"><span class="mode-number">01</span><div><h2>深度记录 <small>MARKDOWN</small></h2><p>细读机制、比较取舍，追溯事实与来源。</p></div></div><div class="mode-row"><span class="mode-number">02</span><div><h2>交互讲解 <small>HTML</small></h2><p>通过图示、案例与交互，建立技术全貌。</p></div></div><p class="mode-footnote">独立组织，共用经过核验的证据。</p></aside></section>
+    <section id="topics" class="archive" aria-labelledby="archive-title"><div class="section-top"><div><p class="eyebrow">THE ARCHIVE</p><h2 id="archive-title">主题档案 <span>${String(topics.length).padStart(2, '0')}</span></h2></div><div class="archive-tools">${filters}<label class="search-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="sr-only">搜索主题、关键词或标签</span><input id="topic-search" type="search" placeholder="搜索主题、关键词或标签" autocomplete="off"></label></div></div><div class="topic-list">${sorted.map(card).join('')}</div><p id="search-status" class="sr-only" role="status" aria-live="polite"></p><div id="empty-state" class="empty-state" hidden><p>没有匹配的主题</p><span>试试其他关键词，或清空搜索。</span><button id="clear-search" type="button" class="button button-secondary">清空筛选</button></div></section>
+    <section id="about" class="about" aria-labelledby="about-title"><div><p class="eyebrow">ABOUT THIS ARCHIVE</p><h2 id="about-title">保留探索的过程，<br>也保留判断的依据。</h2></div><div class="about-text"><p>这个仓库记录使用人工智能辅助知识管理和探索的尝试。广度调研梳理一个领域的脉络，深度探索沿着一个具体问题追踪机制与证据。</p><p>资料会随着理解和新证据持续修订。阅读时，请结合每份材料的调研日期、版本范围和引用来源。</p><a class="text-link" href="${escape(site.repository)}">查看仓库与修订记录 ${external}</a></div></section>
+  </main>${footer()}`
+});
+
+await rm(output, { recursive: true, force: true });
+await mkdir(output, { recursive: true });
+await cp(path.join(root, 'site/assets'), path.join(output, 'assets'), { recursive: true });
+await writeFile(path.join(output, 'index.html'), home);
+await writeFile(path.join(output, '.nojekyll'), '');
+
+for (const topic of topics) {
+  const topicDir = path.join(root, topic.slug);
+  const source = await readFile(path.join(topicDir, topic.markdown), 'utf8');
+  const md = new MarkdownIt({ html: false, linkify: true });
+  const tokens = md.parse(source, {});
+  // Relative media/links are authored beside the source Markdown, while its
+  // generated reader lives in report/. Resolve from the source location.
+  const sourceUrl = new URL(url(`${topic.slug}/${topic.markdown}`), 'https://archive.invalid');
+  function resolveReferences(items) {
+    for (const token of items) {
+      const attribute = token.type === 'image' ? 'src' : token.type === 'link_open' ? 'href' : null;
+      const reference = attribute && token.attrGet(attribute);
+      if (reference && !/^(?:#|\/|[a-z][a-z0-9+.-]*:)/i.test(reference)) {
+        const resolved = new URL(reference, sourceUrl);
+        token.attrSet(attribute, resolved.pathname + resolved.search + resolved.hash);
+      }
+      if (token.children) resolveReferences(token.children);
+    }
+  }
+  resolveReferences(tokens);
+  const headings = [];
+  const used = new Set();
+  let reportTitle = topic.title;
+  // Keep the source untouched; its first H1 becomes the reader's page title.
+  const titleIndex = tokens.findIndex((token) => token.type === 'heading_open' && token.tag === 'h1');
+  if (titleIndex >= 0) {
+    reportTitle = tokens[titleIndex + 1].content;
+    tokens.splice(titleIndex, 3);
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].type !== 'heading_open') continue;
+    const title = tokens[i + 1].content;
+    const stem = title.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/\s+/g, '-') || 'section';
+    let id = stem;
+    let suffix = 2;
+    while (used.has(id)) id = `${stem}-${suffix++}`;
+    used.add(id);
+    tokens[i].attrSet('id', id);
+    if (tokens[i].tag === 'h2' || tokens[i].tag === 'h3') headings.push({ id, title, level: Number(tokens[i].tag[1]) });
+  }
+  const defaultHeadingClose = md.renderer.rules.heading_close ?? ((tokens, index, options, env, self) => self.renderToken(tokens, index, options));
+  md.renderer.rules.heading_close = (tokens, index, options, env, self) => {
+    const open = tokens[index - 2];
+    const id = open?.attrGet('id');
+    return `${id ? `<a class="heading-anchor" href="#${escape(id)}" aria-label="此章节的永久链接">#</a>` : ''}${defaultHeadingClose(tokens, index, options, env, self)}`;
+  };
+  md.renderer.rules.table_open = () => '<div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的数据表"><table>\n';
+  md.renderer.rules.table_close = () => '</table></div>\n';
+  const defaultFence = md.renderer.rules.fence;
+  md.renderer.rules.fence = (tokens, index, options, env, self) => `<div class="code-block"><div class="code-toolbar"><span>${escape(tokens[index].info.trim().split(/\s+/)[0] || 'text')}</span><button class="copy-code" type="button">复制</button></div>${defaultFence(tokens, index, options, env, self)}</div>`;
+  const content = md.renderer.render(tokens, md.options, {});
+  const groups = [];
+  for (const heading of headings) {
+    if (heading.level === 2 || !groups.length) groups.push({ ...heading, children: [] });
+    else groups.at(-1).children.push(heading);
+  }
+  const toc = groups.map((group) => `<li class="toc-group"><a href="#${escape(group.id)}" data-toc-id="${escape(group.id)}">${escape(group.title)}</a>${group.children.length ? `<details class="toc-children"><summary>展开小节<span class="sr-only">：${escape(group.title)}</span></summary><ol>${group.children.map((child) => `<li><a href="#${escape(child.id)}" data-toc-id="${escape(child.id)}">${escape(child.title)}</a></li>`).join('')}</ol></details>` : ''}</li>`).join('');
+  const report = shell({
+    title: `${topic.title} · 深度报告 · ${site.title}`, description: topic.summary, route: `${topic.slug}/report/`, className: 'report-page',
+    body: `${header()}<div class="reading-progress" aria-hidden="true"><span></span></div><main id="main" class="reader-main">
+      <section class="report-hero"><nav class="breadcrumb" aria-label="当前位置"><a href="${url('#topics')}">主题档案</a><span>/</span><span>${escape(topic.title)}</span></nav><p class="eyebrow">${kindLabel(topic.kind)} <span class="eyebrow-separator">/</span> 深度报告 <span class="eyebrow-separator">/</span> <time datetime="${topic.date}">${dateLabel(topic.date)}</time>${topic.updated ? ` <span class="eyebrow-separator">/</span> 修订 ${dateLabel(topic.updated)}` : ''}</p><h1>${escape(reportTitle)}</h1><p class="report-description">${escape(topic.summary)}</p><div class="report-actions"><a class="button button-primary" href="${url(`${topic.slug}/${topic.html}`)}">打开交互讲解 ${arrow}</a><a class="button button-secondary" href="${url(`${topic.slug}/${topic.markdown}`)}" download>${book} 下载 Markdown</a><button class="button print-button" type="button" data-print>打印 / PDF</button></div></section>
+      <div class="reader-grid"><aside class="reader-toc"><details class="toc-shell" open><summary>本页目录<span class="toc-toggle" aria-hidden="true">⌄</span></summary><nav aria-label="报告章节"><ol>${toc}</ol></nav></details><div class="toc-note">这是一份带时间范围的资料快照。版本与出处见正文及来源索引。</div></aside><article id="report-content" class="prose" aria-label="${escape(topic.title)}报告正文">${content}<div class="report-end"><span>读到这里，可以换一条理解路径。</span><a class="text-link" href="${url(`${topic.slug}/${topic.html}`)}">打开交互讲解 ${arrow}</a></div></article></div>
+    </main><a class="back-top" href="#main" aria-label="回到页面顶部" hidden>↑</a>${footer()}`
+  });
+  await mkdir(path.join(output, topic.slug, 'report'), { recursive: true });
+  await writeFile(path.join(output, topic.slug, 'report/index.html'), report);
+  for (const file of [topic.markdown, topic.html, ...(topic.assets ?? [])]) {
+    const destination = path.join(output, topic.slug, file);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await cp(path.join(topicDir, file), destination, { recursive: true });
+  }
+  console.log(`Built ${topic.slug}: original HTML + Markdown reader (${headings.length} headings)`);
+}
+
+await writeFile(path.join(output, '404.html'), shell({
+  title: `未找到页面 · ${site.title}`, description: '返回主题档案，继续探索。', route: '404.html',
+  body: `${header()}<main id="main" class="not-found"><p class="eyebrow">404 / PAGE NOT FOUND</p><h1>这条路径暂时没有资料。</h1><p>页面可能已移动，请从主题档案继续阅读。</p><a class="button button-primary" href="${url()}">返回主题档案 ${arrow}</a></main>${footer()}`
+}));
+console.log(`Site ready: dist/ · base path ${base || '/'} · ${topics.length} topic(s)`);

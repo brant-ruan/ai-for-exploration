@@ -1,0 +1,16 @@
+{
+  "name": "ai-for-exploration",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI-assisted knowledge exploration archive on GitHub Pages",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "markdown-it": "15.0.2"
+  }
+}
