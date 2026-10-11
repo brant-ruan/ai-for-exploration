@@ -80,11 +80,7 @@ p, h1, h2, h3, h4 { margin-top: 0; }
 .topic-card h3 a:hover { color: var(--accent); }
 .topic-actions { grid-area: actions; display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0; }
 .topic-actions .button { white-space: nowrap; }
-.topic-summary { grid-area: summary; min-width: 0; margin: 2px 0 0; }
-.topic-summary summary { width: fit-content; color: var(--muted); font-size: 11px; cursor: pointer; }
-.topic-summary summary::marker { color: var(--accent); }
-.topic-summary summary:hover, .topic-summary[open] summary { color: var(--accent); }
-.topic-summary p { max-width: 850px; margin: 10px 0 0; color: var(--text); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
+.topic-summary { grid-area: summary; min-width: 0; max-width: 1000px; margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
 .button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid transparent; border-radius: 4px; font-size: 12px; font-weight: 550; line-height: 1.5; transition: background-color .15s,color .15s,border-color .15s; }
 .button svg { width: 17px; height: 17px; }
 .button-primary { color: var(--white); background: var(--ink); border-color: var(--ink); }

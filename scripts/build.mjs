@@ -95,7 +95,7 @@ function card(topic) {
     <div class="topic-title-row"><h3><a href="${reportUrl}">${escape(topic.title)}</a></h3></div>
     <div class="topic-actions"><a class="button button-primary" href="${htmlUrl}">交互讲解 ${arrow}</a><a class="button button-secondary" href="${reportUrl}">${book} 深度报告</a></div>
     <div class="topic-meta"><span>创建 <time datetime="${topic.created}">${dateLabel(topic.created)}</time></span><span>更新 <time datetime="${topic.updated}">${dateLabel(topic.updated)}</time></span></div>
-    <details class="topic-summary"><summary>查看摘要</summary><p>${escape(topic.summary)}</p></details>
+    <p class="topic-summary">${escape(topic.summary)}</p>
   </article>`;
 }
 const kinds = [...new Set(topics.map((topic) => topic.kind))];
