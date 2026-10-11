@@ -16,6 +16,8 @@ const { site, topics } = JSON.parse(await readFile(path.join(root, 'site/catalog
 const selected = options.slug ? topics.filter((topic) => topic.slug === options.slug) : topics;
 if (!selected.length) throw new Error('Unknown topic: ' + options.slug);
 const css = await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8');
+const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
+const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
 const escape = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 function block(document, key, content, insert) {
   const start = `<!-- archive:${key}:start -->`;
@@ -42,6 +44,10 @@ for (const topic of selected) {
     if (!/<\/head>/i.test(document)) throw new Error('Missing HTML head');
     return document.replace(/<\/head>/i, `${content}\n</head>`);
   });
+  result = block(result, 'icon', `<link data-archive-icon rel="icon" type="image/svg+xml" sizes="any" href="${escape(faviconUri)}">`, (document, content) => {
+    if (!/<\/head>/i.test(document)) throw new Error('Missing HTML head');
+    return document.replace(/<\/head>/i, `${content}\n</head>`);
+  });
   result = block(result, 'header', header, (document, content) => {
     if (!/<body\b[^>]*>/i.test(document)) throw new Error('Missing HTML body');
     return document.replace(/<body\b[^>]*>/i, (tag) => `${tag}\n${content}\n`);
@@ -57,5 +63,5 @@ for (const topic of selected) {
     return document.replace(hero, (_, body, close) => `${body}\n${content}\n${close}`);
   });
   if (result !== original) await writeFile(file, result);
-  console.log(`Synchronized shared style/navigation: ${path.relative(root, file)}`);
+  console.log(`Synchronized shared style/icon/navigation: ${path.relative(root, file)}`);
 }

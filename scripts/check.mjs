@@ -14,6 +14,8 @@ const checksum = (data) => createHash('sha256').update(data).digest('hex');
 const readme = await readFile(path.join(root, 'README.md'), 'utf8');
 if (readme !== replaceReadmeIndex(readme, site, topics)) failures.push('README index differs from catalog; run npm run sync:index');
 const sharedCss = (await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd();
+const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
+const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
 const cname = await readFile(path.join(root, 'CNAME'), 'utf8').catch((error) => {
   if (error.code === 'ENOENT') return null;
   throw error;
@@ -87,6 +89,7 @@ function srcsetUrls(srcset) {
 function inspectHtml(html) {
   const ids = [];
   const references = [];
+  const icons = [];
   // Ignore comments and raw-text bodies such as script/textarea. Inspect their
   // opening attributes; inspect style bodies separately as CSS.
   const tags = /<!--[\s\S]*?-->|<(script|style|textarea|title)\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/\1\s*>|<([a-z][\w:-]*)\b((?:"[^"]*"|'[^']*'|[^'">])*)>/gi;
@@ -99,12 +102,15 @@ function inspectHtml(html) {
       if (!attributes.has(key)) attributes.set(key, decodeEntities(attribute[2] ?? attribute[3] ?? attribute[4] ?? ''));
     }
     if (attributes.has('id')) ids.push(attributes.get('id'));
+    if (name === 'link' && (attributes.get('rel') ?? '').toLowerCase().split(/\s+/).includes('icon')) {
+      icons.push({ href: attributes.get('href'), type: attributes.get('type'), sizes: attributes.get('sizes') });
+    }
     for (const key of ['href', 'src', 'xlink:href']) if (attributes.has(key)) references.push(attributes.get(key));
     if (attributes.has('srcset')) references.push(...srcsetUrls(attributes.get('srcset')));
     if (attributes.has('style')) references.push(...cssUrls(attributes.get('style')));
     if (name === 'style') references.push(...cssUrls(tag[3] ?? ''));
   }
-  return { ids, references };
+  return { ids, references, icons };
 }
 await walk(output);
 const documents = new Map();
@@ -166,10 +172,15 @@ for (const topic of topics) {
   const latestHtml = documents.get(path.join(output, topic.slug, topic.html));
   const embeddedStyle = latestHtml?.match(/<!-- archive:style:start -->\s*<style data-archive-style>\n([\s\S]*?)\n<\/style>\s*<!-- archive:style:end -->/);
   if (embeddedStyle?.[1] !== sharedCss) failures.push(`${topic.slug}: shared interactive CSS differs; run npm run sync:interactive`);
+  const head = latestHtml?.match(/<head\b[^>]*>([\s\S]*?)<\/head\s*>/i)?.[1] ?? '';
+  const icons = inspected.get(path.join(output, topic.slug, topic.html))?.icons ?? [];
+  const iconBlock = head.match(/<!-- archive:icon:start -->([\s\S]*?)<!-- archive:icon:end -->/);
+  const managedIcons = inspectHtml(iconBlock?.[1] ?? '').icons;
+  if (icons.length !== 1 || managedIcons.length !== 1 || icons[0].href !== faviconUri || icons[0].type !== 'image/svg+xml' || icons[0].sizes !== 'any' || managedIcons[0].href !== faviconUri) failures.push(`${topic.slug}: shared interactive favicon differs or is missing from head; run npm run sync:interactive`);
   const metadataBlock = latestHtml?.match(/<!-- archive:meta:start -->([\s\S]*?)<!-- archive:meta:end -->/);
   const metadataDates = [...(metadataBlock?.[1] ?? '').matchAll(/<time datetime="([^"]+)">([^<]+)<\/time>/g)];
   if (metadataDates.length !== 2 || metadataDates[0][1] !== topic.created || metadataDates[0][2] !== topic.created || metadataDates[1][1] !== topic.updated || metadataDates[1][2] !== topic.updated) failures.push(`${topic.slug}: interactive metadata dates differ from catalog`);
-  for (const block of ['header', 'footer', 'meta']) {
+  for (const block of ['icon', 'header', 'footer', 'meta']) {
     if (latestHtml?.split(`<!-- archive:${block}:start -->`).length !== 2 || latestHtml?.split(`<!-- archive:${block}:end -->`).length !== 2) failures.push(`${topic.slug}: missing/duplicate shared ${block} markers`);
   }
   for (const version of topic.history ?? []) {
@@ -193,4 +204,4 @@ for (const topic of topics) {
   }
 }
 if (failures.length) throw new Error(failures.join('\n'));
-console.log(`Checked ${htmlFiles.length} HTML pages, ${checked} local links/anchors, README dates, shared styles, ${topics.length} latest pair(s), and ${topics.reduce((total, topic) => total + (topic.history?.length ?? 0), 0)} historical pair(s).`);
+console.log(`Checked ${htmlFiles.length} HTML pages, ${checked} local links/anchors, README dates, shared styles/icons, ${topics.length} latest pair(s), and ${topics.reduce((total, topic) => total + (topic.history?.length ?? 0), 0)} historical pair(s).`);

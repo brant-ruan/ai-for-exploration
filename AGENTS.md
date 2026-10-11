@@ -29,10 +29,10 @@
 - `site/catalog.json`：登记 `slug`、`title`、`subtitle`、`kind`、`created`、`updated`、`summary`、`tags`、`markdown`、`html`、`assets`、`history`。`kind` 为 `investigation` 或 `exploration`。路径相对主题目录；只声明准备公开的资料。
 - `history` 保存版本、旧内容日期、配对文件、替换说明和 SHA-256；有资源时保存其路径与校验值。结构和更新命令见 [版本约定](.agents/skills/knowledge-archive/references/versioning.md)。`aliases` 只用于保留旧公开入口。
 - `templates/interactive/`：独立交互页的统一基础。使用 [template.html](templates/interactive/template.html) 和 [base.css](templates/interactive/base.css)，按 [GUIDE.md](templates/interactive/GUIDE.md) 保持布局、间距、header/footer及基本组件一致。主题可扩展图示与控件，通用样式改在模板中。
-- `npm run sync:interactive` 将基础 CSS 和共同导航内联到 **latest** HTML；可为 `work/` 草稿指定 `--slug`、`--file`、`--updated`。不改历史文件。最终 HTML 无需 CDN 或远程字体即可独立阅读。
+- `npm run sync:interactive` 将基础 CSS、共同导航和统一图标内联到 **latest** HTML；favicon 从 `site/assets/favicon.svg` 内联为 SVG data URI，离线可用；可为 `work/` 草稿指定 `--slug`、`--file`、`--updated`。不改历史文件，历史页保留当时的图标。最终 HTML 无需 CDN 或远程字体即可独立阅读。
 - `npm run sync:index` 从 catalog 刷新 README 的主题表。新增主题或改目录数据后执行；不要手改自动生成块。
 - `npm run archive:update -- ...` 仅发布已完成的新双草稿，保存旧版本、更新 catalog/README，并在失败时恢复本轮文件。更换资源时用 `--assets` 传入新清单，不预先改旧 catalog 的资源记录；回滚遇到其他编辑时保留恢复材料并报告冲突。它不负责研究、编写正文或自动推送。
-- `scripts/build.mjs` 生成首页与 latest Markdown 阅读页，原样发布最新及历史双文件、声明资源与兼容入口；`scripts/check.mjs` 验证链接、日期索引、共享样式和历史校验值。
+- `scripts/build.mjs` 生成首页与 latest Markdown 阅读页，原样发布最新及历史双文件、声明资源与兼容入口；`scripts/check.mjs` 验证链接、日期索引、共享样式、latest 页面的统一图标和历史校验值。
 - `.github/workflows/pages.yml`：PR 构建检查，`main` 构建并部署。构建产物 `dist/` 不提交。
 - 站点名称为“探索档案”，域名为 `exp.wohin.me`，默认根路径。`CNAME`、Pages 域名设置与 catalog 一致；Actions 不读取 CNAME 来配置域名。更换域名时同步 README，保留 `BASE_PATH` 对项目子路径的支持。
 
