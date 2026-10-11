@@ -1,0 +1,20 @@
+/* One footer presentation for generated pages and standalone interactive HTML. */
+.site-footer { margin: 0; padding: 0; border-top: 1px solid #dce3e8; background: #fff; }
+.site-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; max-width: 1240px; margin: 0 auto; padding: 26px 48px 28px; color: #64748b; font: 11px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.site-footer .footer-copy { font-weight: 400; }
+.site-footer .footer-dot { color: #b5c1ca; padding: 0 9px; }
+.site-footer a { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; }
+.site-footer a:hover { color: #287b76; }
+.site-footer a:focus-visible { outline: 3px solid #287b76; outline-offset: 4px; }
+.site-footer svg { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; }
+@media (max-width: 780px) { .site-footer .footer-inner { padding-left: 25px; padding-right: 25px; } }
+@media (max-width: 600px) {
+  .site-footer .footer-inner { display: block; padding: 23px 21px; font-size: 10px; }
+  .site-footer .footer-copy { display: block; }
+  .site-footer .footer-inner a { margin-top: 10px; }
+}
+@media print {
+  .site-footer { display: block !important; margin-top: 24px; background: #fff; break-inside: avoid; }
+  .site-footer .footer-inner { max-width: none; padding: 16px 0 0; font-size: 8pt; }
+  .site-footer a { color: #172f44; }
+}

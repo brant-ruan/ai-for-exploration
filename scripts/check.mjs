@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { replaceReadmeIndex } from './archive-lib.mjs';
+import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'dist');
@@ -13,7 +14,8 @@ const failures = [];
 const checksum = (data) => createHash('sha256').update(data).digest('hex');
 const readme = await readFile(path.join(root, 'README.md'), 'utf8');
 if (readme !== replaceReadmeIndex(readme, site, topics)) failures.push('README index differs from catalog; run npm run sync:index');
-const sharedCss = (await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd();
+const sharedCss = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}`;
+const sharedNavigation = (await readFile(path.join(root, 'templates/interactive/navigation.js'), 'utf8')).trimEnd();
 const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
 const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
 const cname = await readFile(path.join(root, 'CNAME'), 'utf8').catch((error) => {
@@ -90,6 +92,7 @@ function inspectHtml(html) {
   const ids = [];
   const references = [];
   const icons = [];
+  const classes = [];
   // Ignore comments and raw-text bodies such as script/textarea. Inspect their
   // opening attributes; inspect style bodies separately as CSS.
   const tags = /<!--[\s\S]*?-->|<(script|style|textarea|title)\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\s\S]*?)<\/\1\s*>|<([a-z][\w:-]*)\b((?:"[^"]*"|'[^']*'|[^'">])*)>/gi;
@@ -102,6 +105,7 @@ function inspectHtml(html) {
       if (!attributes.has(key)) attributes.set(key, decodeEntities(attribute[2] ?? attribute[3] ?? attribute[4] ?? ''));
     }
     if (attributes.has('id')) ids.push(attributes.get('id'));
+    if (attributes.has('class')) classes.push(...attributes.get('class').split(/\s+/).filter(Boolean));
     if (name === 'link' && (attributes.get('rel') ?? '').toLowerCase().split(/\s+/).includes('icon')) {
       icons.push({ href: attributes.get('href'), type: attributes.get('type'), sizes: attributes.get('sizes') });
     }
@@ -110,7 +114,16 @@ function inspectHtml(html) {
     if (attributes.has('style')) references.push(...cssUrls(attributes.get('style')));
     if (name === 'style') references.push(...cssUrls(tag[3] ?? ''));
   }
-  return { ids, references, icons };
+  return { ids, references, icons, classes };
+}
+function elementBodyByClass(html, name, className) {
+  const elements = new RegExp(`<${name}\\b((?:"[^"]*"|'[^']*'|[^'">])*)>([\\s\\S]*?)<\\/${name}\\s*>`, 'gi');
+  for (const element of (html ?? '').matchAll(elements)) {
+    const classAttribute = element[1].match(/(?:^|\s)class\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    const tokens = decodeEntities(classAttribute?.[1] ?? classAttribute?.[2] ?? classAttribute?.[3] ?? '').split(/\s+/);
+    if (tokens.includes(className)) return element[2];
+  }
+  return '';
 }
 await walk(output);
 const documents = new Map();
@@ -161,7 +174,17 @@ for (const [file, { ids, references }] of inspected) {
 for (const file of cssFiles) {
   for (const value of cssUrls(await readFile(file, 'utf8'))) await checkReference(file, value);
 }
+for (const name of ['index.html', '404.html']) {
+  const page = documents.get(path.join(output, name));
+  const header = renderHeader({ homeHref: `${base}/`, topicsHref: name === 'index.html' ? '#topics' : `${base}/#topics`, repository: site.repository });
+  if (!page?.includes(header) || inspected.get(path.join(output, name))?.classes.filter(name => name === 'site-header').length !== 1) failures.push(`${name}: header differs from shared template`);
+  if (!page?.includes(renderFooter({ repository: site.repository })) || [...(page ?? '').matchAll(/<footer\b/g)].length !== 1) failures.push(`${name}: footer differs from shared template`);
+}
+if (!(await readFile(path.join(output, 'assets/site.css'), 'utf8')).trimEnd().endsWith(`${headerCss}\n\n${footerCss}`)) failures.push('Site header/footer CSS differs from shared template; run npm run build');
 for (const topic of topics) {
+  const markdown = await readFile(path.join(root, topic.slug, topic.markdown), 'utf8');
+  const firstBlock = markdown.replace(/^\s*# [^\n]+\n/, '').trimStart().split(/\n\s*\n/)[0];
+  if (/^\s*(?:>\s*)?(?:\*\*)?(?:创建(?:日期)?|内容更新(?:日期)?|类型|读者|核验截止)\s*(?:\*\*)?\s*[：:]/m.test(firstBlock)) failures.push(`${topic.slug}: remove opening metadata boilerplate; page dates come from catalog`);
   for (const name of [topic.markdown, topic.html]) {
     const original = await readFile(path.join(root, topic.slug, name));
     const published = await readFile(path.join(output, topic.slug, name));
@@ -169,9 +192,23 @@ for (const topic of topics) {
   }
   const report = documents.get(path.join(output, topic.slug, 'report/index.html'));
   if (!report?.includes('id="report-content"')) failures.push(`${topic.slug}: missing rendered Markdown reader`);
+  if (!report?.includes(renderHeader({ homeHref: `${base}/`, topicsHref: `${base}/#topics`, repository: site.repository })) || inspected.get(path.join(output, topic.slug, 'report/index.html'))?.classes.filter(name => name === 'site-header').length !== 1) failures.push(`${topic.slug}: Markdown reader needs the single shared header`);
+  if (!report?.includes(renderFooter({ repository: site.repository })) || [...(report ?? '').matchAll(/<footer\b/g)].length !== 1) failures.push(`${topic.slug}: Markdown reader needs the single shared footer`);
   const latestHtml = documents.get(path.join(output, topic.slug, topic.html));
+  const headerBlock = latestHtml?.match(/<!-- archive:header:start -->([\s\S]*?)<!-- archive:header:end -->/)?.[1].trim();
+  const expectedHeader = renderHeader({ homeHref: '../', topicsHref: '../#topics', contentHref: '#content', repository: site.repository, reportHref: './report/', interactive: true });
+  if (headerBlock !== expectedHeader || inspected.get(path.join(output, topic.slug, topic.html))?.classes.filter(name => name === 'site-header').length !== 1) failures.push(`${topic.slug}: use the single shared site header; run npm run sync:interactive`);
   const embeddedStyle = latestHtml?.match(/<!-- archive:style:start -->\s*<style data-archive-style>\n([\s\S]*?)\n<\/style>\s*<!-- archive:style:end -->/);
   if (embeddedStyle?.[1] !== sharedCss) failures.push(`${topic.slug}: shared interactive CSS differs; run npm run sync:interactive`);
+  const footerBlock = latestHtml?.match(/<!-- archive:footer:start -->([\s\S]*?)<!-- archive:footer:end -->/)?.[1].trim();
+  if (footerBlock !== renderFooter({ repository: site.repository, interactive: true }) || [...(latestHtml ?? '').matchAll(/<footer\b/g)].length !== 1) failures.push(`${topic.slug}: use the single shared footer without repeated dates; run npm run sync:interactive`);
+  const navigation = latestHtml?.match(/<!-- archive:navigation-script:start -->\s*<script data-archive-navigation>\n([\s\S]*?)\n<\/script>\s*<!-- archive:navigation-script:end -->/);
+  if (navigation?.[1] !== sharedNavigation) failures.push(`${topic.slug}: shared directory script differs; run npm run sync:interactive`);
+  const sidebarNav = elementBodyByClass(latestHtml, 'aside', 'sidebar').match(/<nav\b[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
+  const directoryLabels = [...sidebarNav.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)].map(match => decodeEntities(match[1].replace(/<[^>]+>/g, '')).trim());
+  if (!directoryLabels.length || directoryLabels.some((label, index) => !label.startsWith(String(index + 1).padStart(2, '0') + ' '))) failures.push(`${topic.slug}: interactive directory needs static chapter numbers in reading order`);
+  const heroClasses = inspectHtml(elementBodyByClass(latestHtml, 'header', 'hero')).classes;
+  if (heroClasses.some(name => ['eyebrow', 'metadata'].includes(name)) || inspected.get(path.join(output, topic.slug, topic.html))?.classes.includes('reading-route')) failures.push(`${topic.slug}: remove opening format labels and decorative reading-route dividers`);
   const head = latestHtml?.match(/<head\b[^>]*>([\s\S]*?)<\/head\s*>/i)?.[1] ?? '';
   const icons = inspected.get(path.join(output, topic.slug, topic.html))?.icons ?? [];
   const iconBlock = head.match(/<!-- archive:icon:start -->([\s\S]*?)<!-- archive:icon:end -->/);
@@ -180,7 +217,7 @@ for (const topic of topics) {
   const metadataBlock = latestHtml?.match(/<!-- archive:meta:start -->([\s\S]*?)<!-- archive:meta:end -->/);
   const metadataDates = [...(metadataBlock?.[1] ?? '').matchAll(/<time datetime="([^"]+)">([^<]+)<\/time>/g)];
   if (metadataDates.length !== 2 || metadataDates[0][1] !== topic.created || metadataDates[0][2] !== topic.created || metadataDates[1][1] !== topic.updated || metadataDates[1][2] !== topic.updated) failures.push(`${topic.slug}: interactive metadata dates differ from catalog`);
-  for (const block of ['icon', 'header', 'footer', 'meta']) {
+  for (const block of ['icon', 'header', 'footer', 'meta', 'navigation-script']) {
     if (latestHtml?.split(`<!-- archive:${block}:start -->`).length !== 2 || latestHtml?.split(`<!-- archive:${block}:end -->`).length !== 2) failures.push(`${topic.slug}: missing/duplicate shared ${block} markers`);
   }
   for (const version of topic.history ?? []) {

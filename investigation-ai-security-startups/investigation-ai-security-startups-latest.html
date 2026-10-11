@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="为熟悉网络安全与agent研究的读者，按七个控制点梳理36家公司、产品机制、团队、融资与并购，并提供场景推演。">
+  <title>大语言模型时代的网络安全创业图谱 · 探索档案</title>
+  <!-- archive:icon:start -->
+<link data-archive-icon rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23172f44%22%2F%3E%3Cpath%20d%3D%22M16%2017h17v4H20v22h13v4H16zm21%200h11v30H37v-4h7V21h-7z%22%20fill%3D%22%23f6f7f8%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%224%22%20fill%3D%22%2377b5ad%22%2F%3E%3C%2Fsvg%3E">
+<!-- archive:icon:end -->
+  <style id="topic-style">
+    
+.control-lane { margin: 26px 0; border-top: 3px solid var(--archive-accent); }
+.control-lane.lane-b { border-color: var(--blue); }
+.lane-heading { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; padding-top:16px; }
+.lane-heading span { color:var(--archive-muted); font-size:12px; }
+.control-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.lane-b .control-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.control-card { display:block; padding:16px; border:1px solid var(--archive-line); border-radius:6px; text-decoration:none; color:var(--archive-text); background:white; }
+.control-card:hover { border-color:var(--archive-accent); background:#f0f6f5; }
+.control-code { font:650 13px var(--archive-mono); color:var(--archive-accent); }
+#topic-body .control-card h3 { font-size:16px; line-height:1.65; margin:12px 0; }
+#topic-body .control-card p { font-size:12px; line-height:1.8; margin-bottom:10px; }
+#topic-body .control-card .control-question { font-weight:650; font-size:13px; color:var(--archive-ink); }
+.control-card small { display:block; font-size:11px; }
+.control-count { display:block; margin-top:12px; padding-top:10px; border-top:1px solid var(--archive-line); font-size:10px; color:var(--archive-muted); }
+.evidence-key { display:flex; flex-wrap:wrap; gap:8px 18px; color:var(--archive-muted); font-size:12px; }
+.filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.field { display:grid; gap:6px; min-width:0; }
+.field label { font-size:12px; font-weight:650; color:var(--archive-ink); }
+.field input, .field select, .compare-controls select { width:100%; min-width:0; min-height:42px; padding:7px 10px; border:1px solid #b7c6ce; border-radius:4px; background:white; color:var(--archive-text); }
+.filter-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.topic-button { padding:7px 13px; border:1px solid #a7bec3; background:#edf4f3; border-radius:4px; color:var(--archive-ink); cursor:pointer; font-size:12px; }
+.topic-button:hover { background:#deeeeb; }
+.topic-button:disabled, .enhance-control:disabled { cursor:default; opacity:.7; }
+#filter-result { margin:0 0 0 auto; color:var(--archive-muted); font-size:12px; }
+.company-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start; }
+.company-entry { min-width:0; padding:20px; border:1px solid var(--archive-line); border-radius:var(--archive-radius); background:var(--archive-surface); scroll-margin-top:100px; }
+.company-heading { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+#topic-body .company-heading h3 { font-size:20px; margin:0; line-height:1.55; overflow-wrap:anywhere; }
+.status-pill { flex-shrink:0; margin-top:3px; padding:2px 7px; background:#eaf2f0; color:var(--archive-accent); border-radius:3px; font-size:10px; }
+#topic-body .company-context { margin:8px 0 12px; font-size:11px; line-height:1.75; color:var(--archive-muted); }
+.company-tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
+.company-tags a { font-size:10px; text-decoration:none; }
+#topic-body .company-product { margin:14px 0 10px; font-size:13px; line-height:1.85; color:var(--archive-ink); }
+#topic-body .company-origin { margin:0; font-size:11px; line-height:1.8; color:var(--archive-muted); }
+#topic-body details.company-details { margin:16px 0 0; padding:10px 0 0; border:0; border-top:1px solid var(--archive-line); border-radius:0; }
+.company-details summary { font-size:12px; color:var(--archive-accent); }
+.company-detail-body { padding-top:14px; }
+.company-fields { margin:0; font-size:12px; line-height:1.9; }
+.company-fields > div { margin-bottom:14px; }
+.company-fields dt { color:var(--archive-ink); font-weight:650; }
+.company-fields dd { margin:3px 0 0; overflow-wrap:anywhere; }
+#topic-body .company-detail-body .source { margin:16px 0 0; padding-top:12px; border-top:1px solid var(--archive-line); }
+.compare-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.compare-controls label { display:grid; gap:6px; font-size:12px; font-weight:650; }
+.comparison-table th:first-child { width:110px; }
+.comparison-table td { width:44%; }
+.comparison-table .source { font-size:11px; }
+.case-controls { margin:20px 0; padding:14px 18px; border:1px solid var(--archive-line); border-radius:6px; }
+.case-controls legend { padding:0 6px; font-size:13px; font-weight:650; color:var(--archive-ink); }
+.case-controls label { display:inline-flex; gap:8px; align-items:center; margin-right:22px; font-size:13px; }
+.case-controls input { width:17px; height:17px; accent-color:var(--archive-accent); }
+.case-panel { padding:20px; margin:14px 0; background:white; border:1px solid var(--archive-line); border-left:4px solid var(--archive-accent); border-radius:6px; }
+#topic-body .case-panel h4 { margin:0 0 12px; }
+#topic-body .case-panel p { font-size:13px; }
+#topic-body .case-panel .case-limit { margin:0; color:var(--archive-muted); font-size:12px; }
+.scenario-flow { overflow:auto; }
+.scenario-flow svg { display:block; width:100%; min-width:590px; height:auto; }
+.scenario-flow svg text { font-family:var(--archive-font); }
+.research-paths { list-style:none; margin:0; padding:0; }
+.research-paths li { padding:20px 0; border-top:1px solid var(--archive-line); }
+.research-paths li:first-child { border-top:0; }
+.research-paths h3 { margin-top:0; }
+.research-paths p { font-size:14px; }
+.question-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; font-size:12px; color:var(--archive-muted); }
+.question-meta strong { display:block; color:var(--archive-ink); }
+@media(max-width:1150px) { .control-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .company-list { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) { .filters,.compare-controls,.question-meta { grid-template-columns:minmax(0,1fr); } .control-grid,.lane-b .control-grid { grid-template-columns:minmax(0,1fr); } .company-entry { padding:18px; } .filter-actions { align-items:flex-start; } #filter-result { width:100%; margin:5px 0 0; } .case-controls label { display:flex; margin:9px 0; } }
+@media print {
+  .filters,.filter-actions,.compare-controls,.case-controls,.js-hint,#no-results { display:none !important; }
+  .company-list { display:block; }
+  #company-list .company-entry[hidden], #case-panels .case-panel[hidden] { display:block !important; }
+  .company-entry { margin-bottom:16px; break-inside:auto; }
+  .company-details::details-content { display:block !important; content-visibility:visible !important; }
+  .company-details > .company-detail-body { display:block !important; }
+  .company-details summary { display:none; }
+  .company-heading,.company-fields > div { break-inside:avoid; }
+  .control-grid,.lane-b .control-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .control-card { break-inside:avoid; }
+  .case-panel { break-inside:avoid; }
+  .scenario-flow { overflow:visible; }
+  .scenario-flow svg { min-width:0; }
+  .source-links a { overflow-wrap:anywhere; }
+}
+
+  </style>
+  <!-- archive:style:start -->
+<style data-archive-style>
+/* Shared presentation only. Inject after topic CSS; keep topic controls in topic CSS. */
+:root {
+  --archive-header-height: calc(var(--site-header-height, 88px) + 1px);
+  --archive-max-width: 1400px;
+  --archive-sidebar-width: 232px;
+  --archive-ink: #172f44;
+  --archive-text: #354554;
+  --archive-muted: #627280;
+  --archive-accent: #286a66;
+  --archive-paper: #f7f8fa;
+  --archive-surface: #ffffff;
+  --archive-line: #dce3e8;
+  --archive-radius: 8px;
+  --archive-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --archive-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --archive-space-sm: 12px;
+  --archive-space-md: 24px;
+  --archive-space-lg: 40px;
+  --archive-space-xl: 64px;
+  /* Compatibility aliases for existing authored topic components. */
+  --paper: var(--archive-paper);
+  --white: var(--archive-surface);
+  --ink: var(--archive-ink);
+  --muted: var(--archive-muted);
+  --blue: #2b617f;
+  --pale: #edf3f7;
+  --green: #2f6d63;
+  --mint: #eaf2ef;
+  --amber: #946730;
+  --sand: #f5eee1;
+  --red: #a54e49;
+  --line: var(--archive-line);
+  --radius: var(--archive-radius);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--archive-header-height) + 20px); }
+body { margin: 0; background: var(--archive-paper); color: var(--archive-text); font: 15px/1.9 var(--archive-font); -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+a:hover { color: var(--archive-accent); }
+button, input, select, textarea { font: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #347e79; outline-offset: 4px; }
+.skip { position: fixed; top: -80px; left: 20px; z-index: 100; padding: 10px 16px; background: var(--archive-ink); color: white; border-radius: 4px; }
+.skip:focus { top: 12px; color: white; }
+
+/* Site header and footer are supplied by templates/shared/. */
+.archive-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin: 0; color: var(--archive-muted); font: 11px/1.8 var(--archive-font); }
+.archive-meta p { margin: 0; }
+.archive-meta a { color: inherit; }
+.hero .archive-meta { margin-top: 18px; }
+
+/* High-level layout contract: .layout > .sidebar + main. */
+.layout { display: grid; grid-template-columns: var(--archive-sidebar-width) minmax(0,1fr); align-items: start; width: 100%; max-width: var(--archive-max-width); margin: 0 auto; }
+.sidebar { position: sticky; top: var(--archive-header-height); align-self: start; height: calc(100vh - var(--archive-header-height)); max-height: calc(100vh - var(--archive-header-height)); min-width: 0; margin: 0; padding: 30px 20px; overflow: auto; border-right: 1px solid var(--archive-line); background: var(--archive-paper); scrollbar-width: thin; }
+.sidebar .brand { margin: 0; color: var(--archive-ink); font-size: 17px; line-height: 1.5; font-weight: 650; letter-spacing: .02em; overflow-wrap: anywhere; }
+.sidebar nav { display: grid; gap: 4px; margin-top: 24px; }
+.sidebar nav a { display: block; padding: 7px 10px; border-radius: 4px; color: var(--archive-muted); font-size: 12px; line-height: 1.7; text-decoration: none; }
+.sidebar .sidebar-print { display: block; margin-top: 28px; padding: 8px 12px; border: 1px solid var(--archive-line); border-radius: 4px; background: var(--archive-surface); color: var(--archive-muted); font: 11px/1.7 var(--archive-font); cursor: pointer; }
+.sidebar .sidebar-print:disabled { opacity: .6; cursor: default; }
+.sidebar .sidebar-print:hover { color: var(--archive-accent); border-color: var(--archive-accent); }
+.sidebar nav a:hover, .sidebar nav a.current, .sidebar nav a[aria-current="location"] { color: var(--archive-accent); background: #eaf2f0; }
+.layout > main { width: 100%; min-width: 0; max-width: none; margin: 0; padding: 42px 44px 64px; }
+.hero { margin: 0; padding: 12px 0 38px; border-bottom: 1px solid var(--archive-line); }
+.hero h1 { max-width: 960px; margin: 8px 0 22px; color: var(--archive-ink); font-size: clamp(32px,3.8vw,48px); font-weight: 650; line-height: 1.4; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.hero h1 span { color: var(--blue); }
+.hero .dek { max-width: 900px; margin-bottom: 20px; color: var(--archive-muted); font-size: 17px; line-height: 1.95; }
+.eyebrow { display: inline-block; margin: 0 0 10px; color: var(--archive-accent); font-size: 10px; font-weight: 650; line-height: 1.7; letter-spacing: .09em; }
+.metadata { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; color: var(--archive-muted); font-size: 11px; }
+.pill { display: inline-flex; padding: 3px 9px; border: 1px solid var(--archive-line); border-radius: 4px; background: var(--archive-surface); color: var(--archive-muted); font-size: 11px; line-height: 1.7; }
+.hero-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-top: 24px; }
+.hero-stat { min-width: 0; padding: 16px 18px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.hero-stat b { display: block; color: var(--archive-ink); font-size: 18px; line-height: 1.6; }
+.hero-stat span { color: var(--archive-muted); font-size: 12px; }
+
+/* Content components: no field-specific sections, visual scores or chart rules. */
+.layout main section { margin-bottom: 24px; padding-top: 52px; scroll-margin-top: 16px; }
+.section-head { display: flex; gap: 18px; margin-bottom: 24px; }
+.section-head > div { min-width: 0; }
+.number { flex-shrink: 0; min-width: 36px; margin-top: 5px; color: var(--archive-accent); font: 500 22px/1.5 var(--archive-mono); }
+.layout main h2 { margin: 0 0 12px; color: var(--archive-ink); font-size: 27px; font-weight: 650; line-height: 1.5; letter-spacing: -.02em; }
+.layout main h3 { margin: 8px 0 12px; color: var(--archive-ink); font-size: 20px; font-weight: 650; line-height: 1.6; }
+.layout main h4 { margin: 22px 0 10px; color: var(--archive-ink); font-size: 16px; line-height: 1.7; }
+.layout main p { margin: 0 0 18px; }
+.layout main strong { font-weight: 650; }
+.lede { max-width: 900px; margin: 0; color: var(--archive-muted); font-size: 16px; line-height: 1.9; }
+small, .small { color: var(--archive-muted); font-size: 12px; }
+.label { color: var(--archive-muted); font-size: 10px; font-weight: 650; letter-spacing: .06em; }
+.grid2, .grid3 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.grid3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.card, .widget, .figure { min-width: 0; margin: 0 0 22px; padding: 24px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.card p:last-child, .widget > p:last-child { margin-bottom: 0; }
+.widget-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.layout main .widget-title h3 { margin: 0; }
+.figure figcaption { margin-top: 14px; color: var(--archive-muted); font-size: 12px; line-height: 1.8; }
+.table-wrap { max-width: 100%; margin: 24px 0; overflow: auto; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); scrollbar-width: thin; }
+.table-wrap table { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--archive-surface); font-size: 13px; line-height: 1.85; }
+.table-wrap th, .table-wrap td { padding: 12px 14px; border-bottom: 1px solid var(--archive-line); text-align: left; vertical-align: top; }
+.table-wrap th { background: #edf3f5; color: var(--archive-ink); font-weight: 650; }
+.table-wrap tr:last-child td { border-bottom: 0; }
+.table-wrap a { overflow-wrap: anywhere; }
+.stack { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 16px; padding: 16px 18px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.layer:nth-child(2n) { background: #f0f4f6; }
+.layer > * { min-width: 0; }
+.layer b { color: var(--archive-ink); font-size: 16px; }
+.layer span { color: var(--archive-muted); font-size: 13px; }
+.note { margin: 22px 0; padding: 17px 20px; border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; background: var(--pale); font-size: 14px; }
+.note.green { border-color: var(--green); background: var(--mint); }
+.note.amber { border-color: var(--amber); background: var(--sand); }
+.note p:last-child { margin-bottom: 0; }
+.rule { margin: 30px 0; border-top: 1px solid var(--archive-line); }
+.source { font-size: 11px; line-height: 1.8; }
+.code { margin: 22px 0; padding: 20px 22px; overflow: auto; border-radius: var(--archive-radius); background: var(--archive-ink); color: #e9f2f6; font: 12px/1.85 var(--archive-mono); white-space: pre-wrap; word-break: break-word; }
+.layout main details { margin: 16px 0; padding: 16px 20px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.layout main summary { cursor: pointer; font-weight: 650; }
+.layout main details > :last-child { margin-bottom: 0; }
+.layout main blockquote { margin: 24px 0; padding: 15px 20px; border-left: 3px solid #709b96; background: #f0f5f4; }
+.footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--archive-line); color: var(--archive-muted); font-size: 12px; }
+
+@media (max-width: 1150px) {
+  :root { --archive-sidebar-width: 210px; }
+  .layout > main { padding: 34px 30px 56px; }
+  .sidebar { padding: 26px 16px; }
+  .grid3 { grid-template-columns: minmax(0,1fr); }
+  .hero-grid { gap: 10px; }
+}
+@media (max-width: 820px) {
+  .layout { display: block; }
+  .sidebar { position: static; top: auto; height: auto; max-height: none; padding: 18px 20px; border-right: 0; border-bottom: 1px solid var(--archive-line); }
+  .sidebar .brand { font-size: 15px; }
+  .sidebar nav { display: flex; gap: 5px; margin-top: 13px; overflow: auto; }
+  .sidebar .sidebar-print { display: none; }
+  .sidebar nav a { flex-shrink: 0; padding: 7px 9px; font-size: 11px; white-space: nowrap; }
+  .layout > main { padding: 26px 20px 48px; }
+  .hero { padding: 4px 0 30px; }
+  .hero h1 { font-size: clamp(30px,6vw,38px); line-height: 1.45; }
+  .hero .dek { font-size: 15px; }
+  .hero-grid, .grid2, .grid3 { grid-template-columns: minmax(0,1fr); }
+  .hero-stat { padding: 13px 16px; }
+  .layout main section { padding-top: 40px; }
+  .section-head { gap: 12px; }
+  .number { min-width: 28px; font-size: 19px; }
+  .layout main h2 { font-size: 24px; }
+  .layout main h3 { font-size: 18px; }
+  .lede { font-size: 15px; }
+  .card, .widget, .figure { padding: 18px; }
+  .layer { grid-template-columns: minmax(0,1fr); gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+@media print {
+  @page { margin: 16mm; }
+  body { background: white; color: #172f44; font-size: 10pt; line-height: 1.75; }
+  .archive-header, .sidebar, .skip { display: none !important; }
+  .layout { display: block; max-width: none; }
+  .layout > main { max-width: none; padding: 0; }
+  .hero { padding: 0 0 20px; }
+  .hero h1 { font-size: 28pt; }
+  .hero .dek { font-size: 11pt; }
+  .layout main section { padding-top: 28px; }
+  .layout main h2 { font-size: 18pt; }
+  .layout main h3 { font-size: 13pt; }
+  .grid2, .grid3, .hero-grid { display: block; }
+  .card, .widget, .figure { break-inside: avoid; padding: 16px; border-color: #bcc6cd; }
+  .table-wrap { overflow: visible; }
+  .table-wrap table { min-width: 0; font-size: 8pt; }
+  .table-wrap th, .table-wrap td { padding: 6px 8px; }
+  /* Reset only print sizing, never an SVG's coordinates, labels or colors. */
+  .layout .figure > svg { min-width: 0; max-width: 100%; height: auto; }
+  .code { overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 8pt; }
+  .archive-meta { font-size: 8pt; }
+  .note { print-color-adjust: exact; }
+}
+
+/* Shared masthead: one presentation for the site and standalone archives. */
+:root {
+  --site-header-height: 88px;
+  --site-header-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --site-header-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+.skip-link { position: fixed; z-index: 100; top: -80px; left: 20px; margin: 0; padding: 9px 18px; border-radius: 0; color: #fff; background: #172f44; font: 14px/1.6 var(--site-header-font); text-decoration: none; }
+.skip-link:focus { top: 12px; color: #fff; }
+.site-header { position: sticky; top: 0; z-index: 40; margin: 0; padding: 0; border-bottom: 1px solid #dfe5ea; background: rgba(247,248,250,.97); color: #172f44; }
+.site-header .header-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; width: 100%; max-width: 1240px; height: var(--site-header-height); margin: 0 auto; padding: 0 48px; }
+.site-header .brand { display: inline-flex; align-items: center; gap: 15px; flex-shrink: 0; margin: 0; color: #172f44; font: 650 17px/1.4 var(--site-header-font); letter-spacing: normal; text-decoration: none; white-space: nowrap; }
+.site-header .brand small { display: block; margin-top: 3px; color: #6b7884; font-size: 11px; font-weight: 450; line-height: 1.4; letter-spacing: .025em; }
+.site-header .brand-mark { padding-right: 7px; font: 400 32px/1 var(--site-header-mono); letter-spacing: -7px; }
+.site-header .brand-mark i { font-style: normal; color: #286a66; }
+.site-header .site-nav { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px 28px; min-width: 0; margin: 0; font: 13px/1.8 var(--site-header-font); }
+.site-header .site-nav a { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; color: #354554; text-decoration: none; white-space: nowrap; }
+.site-header .brand:hover, .site-header .site-nav a:hover, .site-header .site-nav a[aria-current="page"] { color: #286a66; }
+.site-header svg { display: block; width: 16px; height: 16px; flex-shrink: 0; }
+.skip-link:focus-visible, .site-header a:focus-visible { outline: 3px solid #347e79; outline-offset: 4px; }
+@media (max-width: 780px) {
+  :root { --site-header-height: 73px; }
+  .site-header .header-inner { padding-left: 25px; padding-right: 25px; }
+  .site-header .site-nav { column-gap: 20px; font-size: 12px; }
+}
+@media (max-width: 600px) {
+  .site-header .header-inner { padding-left: 21px; padding-right: 21px; }
+  .site-header .brand { gap: 10px; font-size: 15px; }
+  .site-header .brand small { font-size: 9px; }
+  .site-header .brand-mark { font-size: 27px; letter-spacing: -6px; }
+  .site-header .site-nav { column-gap: 16px; font-size: 11px; }
+  .site-header .repo-link svg { display: none; }
+}
+@media (max-width: 360px) {
+  .site-header .site-nav { column-gap: 12px; font-size: 10px; }
+}
+@media print {
+  .site-header, .skip-link { display: none !important; }
+}
+
+/* One footer presentation for generated pages and standalone interactive HTML. */
+.site-footer { margin: 0; padding: 0; border-top: 1px solid #dce3e8; background: #fff; }
+.site-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; max-width: 1240px; margin: 0 auto; padding: 26px 48px 28px; color: #64748b; font: 11px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.site-footer .footer-copy { font-weight: 400; }
+.site-footer .footer-dot { color: #b5c1ca; padding: 0 9px; }
+.site-footer a { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; }
+.site-footer a:hover { color: #287b76; }
+.site-footer a:focus-visible { outline: 3px solid #287b76; outline-offset: 4px; }
+.site-footer svg { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; }
+@media (max-width: 780px) { .site-footer .footer-inner { padding-left: 25px; padding-right: 25px; } }
+@media (max-width: 600px) {
+  .site-footer .footer-inner { display: block; padding: 23px 21px; font-size: 10px; }
+  .site-footer .footer-copy { display: block; }
+  .site-footer .footer-inner a { margin-top: 10px; }
+}
+@media print {
+  .site-footer { display: block !important; margin-top: 24px; background: #fff; break-inside: avoid; }
+  .site-footer .footer-inner { max-width: none; padding: 16px 0 0; font-size: 8pt; }
+  .site-footer a { color: #172f44; }
+}
+</style>
+<!-- archive:style:end -->
+</head>
+<body>
+  <!-- archive:header:start -->
+<a class="skip-link archive-skip" href="#content">跳到主要内容</a>
+<header class="site-header archive-header">
+  <div class="header-inner archive-header-inner">
+    <a class="brand archive-brand" href="../"><span class="brand-mark" aria-hidden="true">[<i>·</i>]</span><span>探索档案<small>ai-for-exploration</small></span></a>
+    <nav class="site-nav archive-nav" aria-label="站点导航"><a href="../#topics">主题档案</a><a href="./report/">深度报告（最新）</a><a class="repo-link" href="https://github.com/brant-ruan/ai-for-exploration" aria-label="在 GitHub 查看仓库">GitHub <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></nav>
+  </div>
+</header>
+<!-- archive:header:end -->
+  <div class="layout">
+    <aside class="sidebar" aria-label="本页目录">
+      <div class="brand">AI安全创业图谱</div>
+      <nav aria-label="章节目录">
+        <a href="#map">01 两条主线 / 七个控制点</a><a href="#directory">02 公司与产品资料</a><a href="#compare">03 双公司机制对照</a><a href="#scenario">04 邮件注入场景</a><a href="#development">05 并购与平台方向</a><a href="#questions">06 值得追问的问题</a>
+      </nav>
+      <button class="sidebar-print" type="button" data-archive-print disabled>打印 / 保存为 PDF</button>
+    </aside>
+    <main id="content">
+      <header class="hero">
+        <h1>大语言模型时代的网络安全创业图谱</h1>
+        <p class="dek">公司很多，先找到它们解决的问题。以产品控制点组织LLM与agent防护、漏洞工作流和SOC创新，再比较团队来源、技术机制与发展状态。</p>
+        <!-- archive:meta:start -->
+<div class="archive-meta"><span>创建 <time datetime="2026-10-11">2026-10-11</time></span><span>内容更新 <time datetime="2026-10-11">2026-10-11</time></span></div>
+<!-- archive:meta:end -->
+      </header>
+      <div id="topic-body">
+        
+<section id="map"><div class="section-head"><span class="number">01</span><div><h2>两条主线，七个控制点</h2><p class="lede">分类看客户购买的安全结果。同样使用LLM，保护agent与用agent做安全，所需证据和可执行权限都不同。</p></div></div>
+<div class="control-lane"><div class="lane-heading"><h3>Security for AI</h3><span>企业部署AI后，新增什么需要保护？</span></div><div class="control-grid"><a class="control-card" href="#directory" data-category="A1"><span class="control-code">A1</span><h3>AI资产、模型与供应链</h3><p class="control-question">什么进入生产？</p><p>模型工件、依赖、资产及姿态</p><small>扫描无恶意，不代表后续行为安全。</small><span class="control-count">本页关联 5 家 · 可多类归属</span></a><a class="control-card" href="#directory" data-category="A2"><span class="control-code">A2</span><h3>评测与AI红队</h3><p class="control-question">上线前怎样暴露失败？</p><p>攻击生成、多轮测试、回归评测</p><small>有限测试集无法覆盖所有适应性攻击。</small><span class="control-count">本页关联 13 家 · 可多类归属</span></a><a class="control-card" href="#directory" data-category="A3"><span class="control-code">A3</span><h3>运行时与AI使用治理</h3><p class="control-question">哪些内容和流量应拦截？</p><p>检测器、代理、DLP、使用策略</p><small>需要接入覆盖、业务上下文和误报控制。</small><span class="control-count">本页关联 14 家 · 可多类归属</span></a><a class="control-card" href="#directory" data-category="A4"><span class="control-code">A4</span><h3>agent行动、身份与权限</h3><p class="control-question">谁允许它执行什么？</p><p>工具策略、身份、凭证、最小权限</p><small>凭证合法不证明每个具体动作合法。</small><span class="control-count">本页关联 13 家 · 可多类归属</span></a></div></div>
+<div class="control-lane lane-b"><div class="lane-heading"><h3>AI for Security</h3><span>已有安全工作，怎样成为可验证的执行闭环？</span></div><div class="control-grid"><a class="control-card" href="#directory" data-category="B1"><span class="control-code">B1</span><h3>发现与攻击验证</h3><p class="control-question">能否交付可重现的漏洞？</p><p>源码/Web/网络探索、PoC、复测</p><small>候选、重发现、盲测发现必须区分。</small><span class="control-count">本页关联 10 家 · 可多类归属</span></a><a class="control-card" href="#directory" data-category="B2"><span class="control-code">B2</span><h3>修复与漏洞管理</h3><p class="control-question">能否减少可利用暴露？</p><p>去重、排序、补丁、backport</p><small>通过已有测试不等于修复了安全根因。</small><span class="control-count">本页关联 4 家 · 可多类归属</span></a><a class="control-card" href="#directory" data-category="B3"><span class="control-code">B3</span><h3>SOC调查与响应</h3><p class="control-question">能否形成可靠结案证据？</p><p>查询、调查、证据、执行编排</p><small>缺失遥测不能被推理补成事实。</small><span class="control-count">本页关联 6 家 · 可多类归属</span></a></div></div>
+<p class="note">控制点会重叠：SOC agent也需要内容和行动约束；AI红队自身也可使用攻击agent。图上的数量仅是本页关联记录，不能用于估算市场份额。</p>
+<div class="evidence-key"><span><strong>官方披露</strong>：团队、融资与交易</span><span><strong>文档/源码/论文</strong>：公开机制与实验</span><span><strong>自述</strong>：客户、增长及效果</span><span><strong>分析</strong>：控制点、边界与候选问题</span></div>
+</section>
+
+<section id="directory"><div class="section-head"><span class="number">02</span><div><h2>公司与产品资料</h2><p class="lede">围绕控制点缩小名单，再展开技术与资金口径。成立更早的公司保留前史；被收购、资产转移和独立成长分别标注。</p></div></div>
+<p class="small">核验截至2026-10-11，主体共36家。地区表示创业、研发或主要商业布局，可多选归属；团队类型是背景归纳，非完整人员比例统计；发展阶段是公开融资记录的粗标签，不代表员工或收入规模。没有在本轮对商业产品做实测。</p>
+<div class="widget"><form id="company-filters" class="filters" role="search" aria-label="筛选公司">
+<div class="field"><label for="category-filter">产品控制点</label><select class="enhance-control" id="category-filter" disabled><option value="">全部控制点</option><option value="A1">A1 AI资产、模型与供应链</option><option value="A2">A2 评测与AI红队</option><option value="A3">A3 运行时与AI使用治理</option><option value="A4">A4 agent行动、身份与权限</option><option value="B1">B1 发现与攻击验证</option><option value="B2">B2 修复与漏洞管理</option><option value="B3">B3 SOC调查与响应</option></select></div>
+<div class="field"><label for="region-filter">地区关联</label><select class="enhance-control" id="region-filter" disabled><option value="">全部地区</option><option value="美国">美国</option><option value="以色列">以色列</option><option value="欧洲">欧洲</option><option value="中国">中国</option></select></div>
+<div class="field"><label for="team-filter">创始团队背景</label><select class="enhance-control" id="team-filter" disabled><option value="">全部背景</option><option value="学术">学术</option><option value="产业">产业</option><option value="混合">混合</option></select></div>
+<div class="field"><label for="status-filter">组织状态</label><select class="enhance-control" id="status-filter" disabled><option value="">全部状态</option><option value="独立">独立</option><option value="已收购">已收购</option><option value="资产转移">资产转移</option></select></div>
+<div class="field"><label for="stage-filter">可核验发展阶段</label><select class="enhance-control" id="stage-filter" disabled><option value="">全部阶段</option><option value="种子">种子</option><option value="成长">成长</option><option value="未知">未知</option><option value="已收购">已收购</option></select></div>
+<div class="field"><label for="company-search">公司、技术或团队关键词</label><input class="enhance-control" type="search" id="company-search" placeholder="例如：MCP、fuzzing、清华" disabled></div>
+</form><div class="filter-actions"><button class="topic-button enhance-control" id="reset-filters" type="button" disabled>重置筛选</button><button class="topic-button enhance-control" id="expand-details" type="button" disabled>展开当前资料</button><button class="topic-button enhance-control" id="collapse-details" type="button" disabled>收起当前资料</button><p id="filter-result" role="status" aria-live="polite">显示36家；可多类、跨地区归属</p></div></div>
+<noscript><p class="note">JavaScript未启用：以下全部公司及详情直接展示，可用浏览器查找；对照和案例保留静态内容。</p></noscript>
+<p id="no-results" class="note" hidden>没有匹配资料。可以减少筛选条件或更换关键词。</p>
+<div class="company-list" id="company-list"><article class="company-entry" id="company-hiddenlayer" data-company-id="hiddenlayer" data-categories="A1 A3 A4" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">HiddenLayer</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 Austin；产业安全研究团队</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A1">A1 AI资产、模型与供应链</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">AI 发现、模型供应链扫描、攻击模拟、运行时防护；2026 扩展 coding-agent harness 防护。</p>
+      <p class="company-origin" data-field="origin">2022 公开起步；从 adversarial ML / 模型保护扩展生成式和 agentic AI。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Austin；产业安全研究团队</dd></div><div><dt>团队与来源</dt><dd data-field="team">Christopher Sestito、Tanner Burns、Jim Ballard；Cylance 模型攻击经验衍生的团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">扫描模型工件，模拟攻击并在运行时识别攻击信号；2026 强调工具滥用和未经授权行动。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">各模块对应不同威胁；最新客户与 ARR 增长数字为厂商自述，未独立验证。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-09-02 B 轮 $100M；已核 seed $6M、A $50M 与 B 合计至少 $156M。</dd></div><div><dt>发展状况</dt><dd data-field="development">最新融资用于深化 agent runtime 和 Agent Harness Security；本次无产品实测。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.hiddenlayer.com/about-us">官方团队</a> · <a href="https://www.hiddenlayer.com/podcasts/chris-tito-sestito-ceo-amp-co-founder-hiddenlayer">产业起源与 A 轮</a> · <a href="https://www.hiddenlayer.com/news/hiddenlayer-emerges-from-stealth-to-protect-ai-models-from-attacks">官网收录的早期 seed 媒体稿</a> · <a href="https://www.hiddenlayer.com/news/hiddenlayer-100m-series-b-ai-security">2026 B 与产品路线</a></p></div></details>
+    </article><article class="company-entry" id="company-noma-security" data-company-id="noma-security" data-categories="A1 A4 A3" data-regions="美国 以色列" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Noma Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国商业市场 / 以色列 Tel Aviv R&amp;D</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A1">A1 AI资产、模型与供应链</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">AI-SPM、Agent Access Control、AI-DR 与 AI Red Teaming。</p>
+      <p class="company-origin" data-field="origin">2023 创业；2024-10-31 出隐身，先从 AI 开发生命周期统一平台切入。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国商业市场 / 以色列 Tel Aviv R&amp;D</dd></div><div><dt>团队与来源</dt><dd data-field="team">Niv Braun、Alon Tron；Niv 本人履历称曾在 8200 与 Verint 负责安全。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">API 集成盘点模型、数据和 agent 资产；registry/身份与权限控制限定访问，runtime 检查越界行为。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">资产盘点覆盖不自动等于所有执行链可拦截；ARR 增长为公司自述且未披露基数。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-07-31 B 轮 $100M；2024 官方投资方披露 seed+A $32M，已核轮次合计 $132M。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-06-02 公布 Agent Access Control；已公开多模块产品，效果未独立测评。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://ballisticventures.com/why-we-led-the-series-a-round-in-noma/">投资方创始人与早期融资</a> · <a href="https://councils.forbes.com/profile/Niv-Braun-Co-Founder-CEO-Noma-Security/8d49d114-01b9-4862-a067-09b15a3fe957">创始人自述履历</a> · <a href="https://noma.security/blog/noma-security-raises-100m-to-drive-adoption-of-ai-agent-security">B 轮与生产部署自述</a> · <a href="https://noma.security/blog/noma-launches-agentic-access-control-to-govern-ai-agents-and-mcp-servers-across-the-enterprise">2026 行动访问控制</a></p></div></details>
+    </article><article class="company-entry" id="company-pillar-security" data-company-id="pillar-security" data-categories="A1 A2 A4" data-regions="美国 以色列" data-team-type="产业" data-status="独立" data-stage="种子">
+      <div class="company-heading"><h3 data-field="name">Pillar Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">种子</span> · 以色列研发背景 / 美国 Miami 商业联系</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A1">A1 AI资产、模型与供应链</a><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">AI 资产与攻击面、上下文 red teaming、运行时策略；2026 Red Graph Suite。</p>
+      <p class="company-origin" data-field="origin">2025 公开 seed 融资；成立年本次未用一手确认。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列研发背景 / 美国 Miami 商业联系</dd></div><div><dt>团队与来源</dt><dd data-field="team">Dor Sarig、Ziv Karliner；MoD/Perimeter81/Cymulate 与情报部门/IBM Trusteer/Aqua 背景。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">将 agents、工具和工件的上下文纳入持续测试；研究覆盖 rules-file、MCP 和 sandbox 攻击链。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">公开攻击研究证明团队研究能力；产品 docs 受限，不能推完整商业覆盖；官网职位有冲突。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-04-16 seed $9M，Shield 领投；本次未核到更新融资，完整累计未知。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-08-06 公布 Red Graph Suite；持续披露 agent/MCP 研究，效果未实测。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.pillar.security/about">创始人履历</a> · <a href="https://www.pillar.security/blog/pillar-security-raises-9m-to-help-companies-build-and-run-secure-ai-software">融资</a> · <a href="https://www.golden.ventures/portfolio/pillar-security">投资方地点</a> · <a href="https://www.pillar.security/blog">2026 产品与研究</a></p></div></details>
+    </article><article class="company-entry" id="company-protect-ai" data-company-id="protect-ai" data-categories="A1 A2 A3" data-regions="美国" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Protect AI</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 美国 Seattle；现属 Palo Alto Networks</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A1">A1 AI资产、模型与供应链</a><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">模型工件扫描、AI 红队与运行时防护；收购后进入 Prisma AIRS。</p>
+      <p class="company-origin" data-field="origin">2022 创业；先做 AI/ML 供应链安全，随后扩展 LLM 与应用防护。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Seattle；现属 Palo Alto Networks</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ian Swanson、Daryan Dehghanpisheh、Badar Ahmed；投资方公开确认的产业创始团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">扫描序列化模型和依赖风险，再以对抗测试与流量拦截覆盖部署。当前 AIRS 新能力不能倒灌为收购前实现。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">恶意工件扫描、语义注入检测和工具授权是不同控制；本次未独立测评。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-08-01 B 轮 $60M；投资方当时披露累计 $108.5M。SEC 披露并购对价 $635M。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025-07-22 已完成收购；当前 AIRS 产品模块可从官方年报核对。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://salesforceventures.com/perspectives/market-map-our-security-portfolio/">投资方团队、地点与退出</a> · <a href="https://www.linkedin.com/posts/evolution-equity-partners_protect-ai-raises-60m-in-series-b-financing-activity-7224809947715305473-_dke">投资方 B 轮与累计</a> · <a href="https://investors.paloaltonetworks.com/news-releases/news-release-details/palo-alto-networks-completes-acquisition-protect-ai">完成收购</a> · <a href="https://www.sec.gov/Archives/edgar/data/1327567/000132756726000023/panw-20260731.htm">SEC 对价与当前产品</a></p></div></details>
+    </article><article class="company-entry" id="company-enkrypt-ai" data-company-id="enkrypt-ai" data-categories="A2 A3" data-regions="美国" data-team-type="混合" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Enkrypt AI</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">混合团队</span> · <span data-field="stage">已收购</span> · 美国 Boston；Yale PhD 创始人，现属 Anaconda</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">部署前红队、runtime guardrails、MCP 扫描与治理/合规证据。</p>
+      <p class="company-origin" data-field="origin">2022 创立（公司官方稿）；2024 seed 公开起步。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Boston；Yale PhD 创始人，现属 Anaconda</dd></div><div><dt>团队与来源</dt><dd data-field="team">Sahil Agarwal、Prashanth Harshangi；官网称 Yale PhD 专家，Yale 学校资料确认 Sahil PhD’18。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">在模型、agent 与 MCP 工具上测试风险，以客户环境 guardrails 和审计记录连接开发与运行。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">大规模扫描漏洞比例受厂商样本与分类影响；合规映射不等于法律合规认证。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-02-27 seed $2.35M（官方和投资方）；后续完整累计未知；收购金额未披露。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-08-04 Anaconda 已收购，将安全与 agent 开发/模型治理平台结合。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.enkryptai.com/newsroom/enkrypt-ai-agent-security-solution-to-mitigate-risk-and-non-compliance">团队与 2022 成立</a> · <a href="https://som.yale.edu/event/2024/10/cross-promoted-event-yale-alumni-non-profit-alliance-magnifying-your-mission">Yale 学校创始人资料</a> · <a href="https://www.enkryptai.com/newsroom/enkrypt-ai-secures-2-35-million-in-seed-round">Seed 官方稿</a> · <a href="https://www.anaconda.com/press/anaconda-acquires-enkrypt-ai">Anaconda 已收购</a></p></div></details>
+    </article><article class="company-entry" id="company-giskard" data-company-id="giskard" data-categories="A2" data-regions="欧洲" data-team-type="混合" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Giskard</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">混合团队</span> · <span data-field="stage">成长</span> · 法国起源；欧洲团队，服务全球企业</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a></div>
+      <p class="company-product" data-field="product">开源动态多轮AI测试框架；企业Hub提供持续红队、工具调用测试、评测数据协作与治理。</p>
+      <p class="company-origin" data-field="origin">2021成立；源于生产AI的测试、质量和安全问题，后扩展至LLM与agent红队。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">法国起源；欧洲团队，服务全球企业</dd></div><div><dt>团队与来源</dt><dd data-field="team">Combessie（Dataiku）、John-Mathews（Thales、AI伦理博士）创办；CTO Matteo Dora及多名研究员具博士背景。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">围绕场景、对话轨迹与检查生成多轮攻击；LLM judge和自定义规则判定失败。Hub把定期评测、数据版本、告警及审计接入交付流程。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">属于评测层；覆盖取决于攻击场景和判定器。开源库与企业Hub能力不同，少量发现不能换算完整风险率。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2022首轮€1.5m；2023欧委会战略投资€3m；2024 Bpifrance研究资助€3m。投资与资助分列，不称€7.5m风险融资。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025联合DeepMind推出Phare；2026文档明确agent多轮、工具调用及持续测试能力。客户规模为公司自述。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.giskard.ai/about">官方团队与资金历史</a> · <a href="https://docs.giskard.ai/start/comparison">2026 OSS/Hub能力对照</a> · <a href="https://github.com/Giskard-AI/giskard-oss/blob/48814003452c07c19339278e77a13fa07956d1b7/README.md">v3固定提交4881400</a> · <a href="https://www.giskard.ai/knowledge/giskard-announces-phare-a-new-llm-evaluation-benchmark">Phare发布</a></p></div></details>
+    </article><article class="company-entry" id="company-lakera" data-company-id="lakera" data-categories="A2 A3" data-regions="欧洲 美国" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Lakera</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 瑞士 Zurich / 美国 San Francisco；现属 Check Point</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">Lakera Guard 的提示攻击、内容、泄露与链接防护；Lakera Red 持续对抗评测。</p>
+      <p class="company-origin" data-field="origin">2021 创立；早于 ChatGPT 公测，后以 GenAI Guard / Red 商业化。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">瑞士 Zurich / 美国 San Francisco；现属 Check Point</dd></div><div><dt>团队与来源</dt><dd data-field="team">David Haber、Mateo Rojas-Carulla、Matthias Kraft；收购方称创始团队有 Google/Meta AI 背景。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">低延迟检测 API 与可配置策略，结合 Gandalf 和研究攻击数据更新防护；Red 可连接有状态 agent。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">API 检测效果为厂商自述；接入 Guard 不自动建立最小权限或完整 agent 状态控制。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-07-24 A 轮 $20M，当时累计 $30M；Check Point 披露收购约 $190M 净现金。</dd></div><div><dt>发展状况</dt><dd data-field="development">Q4 2025 已完成收购；当前技术文档已使用 Check Point AI Security 品牌。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.checkpoint.com/press-releases/check-point-acquires-lakera-to-deliver-end-to-end-ai-security-for-enterprises/">团队与收购协议</a> · <a href="https://www.checkpoint.com/press-releases/check-point-software-reports-fourth-quarter-and-2025-full-year-results/">完成交易与净现金</a> · <a href="https://www.hpcwire.com/aiwire/2024/07/24/lakera-raises-20m-series-a-to-secure-generative-ai-applications/">A 轮公司通讯稿</a> · <a href="https://docs.lakera.ai/docs/defenses">现有防护文档</a></p></div></details>
+    </article><article class="company-entry" id="company-lasso-security" data-company-id="lasso-security" data-categories="A2 A3 A4" data-regions="美国 以色列" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Lasso Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 以色列 Tel Aviv / 美国 New York</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">自动化 AI 红队、runtime guardrails、AI 可观测性与 intent/security policy。</p>
+      <p class="company-origin" data-field="origin">2023 创立；从 LLM touchpoints 扩展 intent 与 agent actions 控制。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列 Tel Aviv / 美国 New York</dd></div><div><dt>团队与来源</dt><dd data-field="team">Elad Schulman、Ophir Dror、Lior Ziv、Yuval Abadi；连续创业、AI、安全与运营背景。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">LEAP 的 CPU 非 Transformer classifier 先筛流量；复杂/不确定策略转自托管 RAPID LLM judge。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">机制和基准由厂商自述，闭源；不同硬件/API 的延迟比较不能视为统一公平排名。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-09-02 融资 $30M（官网未标轮次）；加 2023 seed $6M，已核披露至少 $36M。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-09 公布 LEAP/Sheriff 和 RAPID 分层路线；声称已生产部署，未独立复测。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.lasso.security/the-team">完整 founding team</a> · <a href="https://www.lasso.security/resources/lasso-security-funding-announcement-2023">Seed</a> · <a href="https://www.lasso.security/resources/lasso-security-announces-future-of-ai-security-with-cpu-based-guardrails">2026 融资与产品</a> · <a href="https://www.lasso.security/blog/introducing-leap-cpu-based-ai-security-guardrails-with-gpu-class-accuracy">技术与测试条件</a></p></div></details>
+    </article><article class="company-entry" id="company-mindgard" data-company-id="mindgard" data-categories="A2 A3" data-regions="欧洲 美国" data-team-type="混合" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Mindgard</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">混合团队</span> · <span data-field="stage">成长</span> · 英国 Lancaster spinout；London / 美国 Boston</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">Shadow AI discovery、动态 AI 红队和运行时防护，覆盖模型、应用与 agents。</p>
+      <p class="company-origin" data-field="origin">2022 创立；大学十余年研究是前史，不能算作公司成立年。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">英国 Lancaster spinout；London / 美国 Boston</dd></div><div><dt>团队与来源</dt><dd data-field="team">Peter Garraghan、Steve Street；Lancaster 研究衍生，现团队加入 offensive security 产业专家。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">以真实应用与工具链的动态攻击发现风险，将研究发现回流测试和防护；厂商称 DART。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">150+ 公开漏洞为公司汇总自述，本次未逐项核验；研究成绩不等于产品普适检测率。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-08-12 A 轮 $30M；另核到 2024 $8M，已核披露至少 $38M，完整累计未知。</dd></div><div><dt>发展状况</dt><dd data-field="development">当前 CEO 为 James Brear，创始人 Peter Garraghan 任 CSO。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://mindgard.ai/about">现有团队与公司前史</a> · <a href="https://www.lancaster.ac.uk/sci-tech/about-us/news/lancaster-spinout-mindgard-raises-8m-to-revolutionise-ai-security">大学 spinout 与 $8M</a> · <a href="https://www.linkedin.com/posts/sstreet_im-delighted-to-announce-that-we-have-activity-7275829511391215617-qY3E">共同创始人本人声明</a> · <a href="https://mindgard.ai/blog/mindgard-raises-30m-series-a">2026 A 轮</a></p></div></details>
+    </article><article class="company-entry" id="company-robust-intelligence" data-company-id="robust-intelligence" data-categories="A2 A3" data-regions="美国" data-team-type="学术" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Robust Intelligence</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">学术团队</span> · <span data-field="stage">已收购</span> · 美国 San Francisco；Harvard 师生团队，现属 Cisco</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">持续 AI Validation 和 AI Firewall；团队与技术进入 Cisco AI Defense。</p>
+      <p class="company-origin" data-field="origin">2019 创立；先覆盖 predictive ML，后扩展生成式 AI。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco；Harvard 师生团队，现属 Cisco</dd></div><div><dt>团队与来源</dt><dd data-field="team">Yaron Singer 与 Kojin Oshiba；Harvard 教授和学生共同研究 robustness 后创业。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">先用算法化压力测试发现失败模式，再以防火墙实施运行时策略，研究参与自动化 jailbreak。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">验证发现一组弱点不意味着对未知攻击提供保证；官方页面精确收购月份有差异。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2021 B 轮 $30M；累计数字在历史资料中不一致，本次不采用；并购金额未获官方确认。</dd></div><div><dt>发展状况</dt><dd data-field="development">2024 已完成 Cisco 收购；当前官方页面确认其为 AI Defense 基础。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.ciscoinvestments.com/portfolio/robust-intelligence">Cisco 投资方团队与产品</a> · <a href="https://newsroom.cisco.com/c/dam/r/newsroom/en/us/assets/a/y2024/m08/Cisco-Acquires-Robust-Intelligence.pdf">Cisco 托管融资和团队资料</a> · <a href="https://blogs.cisco.com/news/fortifying-the-future-of-security-for-ai-cisco-announces-intent-to-acquire-robust-intelligence">收购完成更新</a> · <a href="https://www.cisco.com/site/us/en/products/security/ai-defense/robust-intelligence-is-part-of-cisco/index.html">当前 Cisco 归属</a></p></div></details>
+    </article><article class="company-entry" id="company-virtue-ai" data-company-id="virtue-ai" data-categories="A2 A3 A4" data-regions="美国" data-team-type="学术" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Virtue AI</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">学术团队</span> · <span data-field="stage">已收购</span> · 美国 San Francisco；Berkeley / Stanford 等学术根源，现属 Fortinet</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">多模态红队、guardrails、Guardian Agent；agent 行为与 MCP/source code 风险检查。</p>
+      <p class="company-origin" data-field="origin">2024 创立（Lightspeed 公司页）；2025-04 公开合并融资。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco；Berkeley / Stanford 等学术根源，现属 Fortinet</dd></div><div><dt>团队与来源</dt><dd data-field="team">Bo Li、Dawn Song、Sanmi Koyejo、Carlos Guestrin；教授级 adversarial ML/可信 AI 创始团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">以自有攻击算法测试模型/agent，再用多模态 detector 与工具行动策略防护；技术细节部分闭源。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">公开研究贡献不能直接证明闭源产品性能；官网旧 founder 职位不能推当前在岗。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-04 seed+A 合计 $30M，Walden/Lightspeed；收购条款未披露，未采用估值推算。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-08-17 Fortinet 宣布已收购；产品能力为官方描述。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.virtueai.com/virtue-ai-team">创始团队</a> · <a href="https://lsvp.com/company/virtue-ai/">投资方成立年</a> · <a href="https://waldencatalyst.com/blog/why-we-invested-in-virtue-ai-building-the-future-of-safe-and-secure-ai">官方投资方 $30M</a> · <a href="https://www.fortinet.com/corporate/about-us/newsroom/press-releases/2026/fortinet-advances-continuous-ai-protection-with-the-acquisition-of-virtue-ai">Fortinet 收购与产品</a></p></div></details>
+    </article><article class="company-entry" id="company-gentel" data-company-id="gentel" data-categories="A2 A3" data-regions="中国" data-team-type="学术" data-status="独立" data-stage="未知">
+      <div class="company-heading"><h3 data-field="name">君同未来 GenTel</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">学术团队</span> · <span data-field="stage">未知</span> · 杭州总部；上海、广州布局，浙大相关科研团队</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">生成式AI评测验证、风险防护监测、可信增强、AIGC识别；公开GenTel-Shield注入检测模型与基准。</p>
+      <p class="company-origin" data-field="origin">现法人2024-06成立（工商转载及访谈）；团队/君同智能2021已产业化，不把官网版权年当现法人创办年。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">杭州总部；上海、广州布局，浙大相关科研团队</dd></div><div><dt>团队与来源</dt><dd data-field="team">韩蒙创始人/CEO，计算机博士与海外高校研究背景，关联浙大研究团队；公开会议另列COO林昶延、CBO冯红婷。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">公开Shield用多语言E5编码器微调恶意/正常二分类；字符扰动与LLM改写增强，覆盖越狱、目标劫持、提示泄漏。商业系统另含测试与监测。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">论文自有基准F1不能外推到2026产品或完整agent权限治理。2026 AI Trust OS是公开战略描述，行动授权机制未充分披露。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-10媒体报道天使轮；未找到公司/投资人一手金额公告，融资规模及累计未知，不据媒体区间量化。</dd></div><div><dt>发展状况</dt><dd data-field="development">已公开2024模型及数据，2026提出AI Trust OS；客户数量、标准覆盖及经营表现主要为自述。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.gentel.com/zh/home">官方产品</a> · <a href="https://arxiv.org/abs/2409.19521">GenTel-Safe论文</a> · <a href="https://huggingface.co/GenTelLab/gentelshield-v1">公开检测模型</a> · <a href="https://www.36kr.com/p/2993607517170696">2024融资与团队（二手）</a></p></div></details>
+    </article><article class="company-entry" id="company-realai" data-company-id="realai" data-categories="A2 A3" data-regions="中国" data-team-type="学术" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">瑞莱智慧 RealAI</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">学术团队</span> · <span data-field="stage">成长</span> · 北京总部；清华人工智能研究院科研孵化</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a></div>
+      <p class="company-product" data-field="product">RealSafe模型评测与对抗增强、RealRange靶场、隐私与深伪产品；公开RealSafe-R1安全推理模型。</p>
+      <p class="company-origin" data-field="origin">2018-07成立，属于LLM之前AI安全公司进入新赛道，不能称ChatGPT后新创。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">北京总部；清华人工智能研究院科研孵化</dd></div><div><dt>团队与来源</dt><dd data-field="team">CEO田天为清华计算机博士；张钹、朱军担任首席科学家。由可信AI、对抗鲁棒性研究商业化，继而扩展到LLM。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">RealSafe-R1用约15k安全感知推理轨迹SFT蒸馏DeepSeek-R1系列；以拒绝有害目标及安全推理来增强模型，另有算法评测产品。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">属于模型行为安全，不能替代agent执行权限。7B模型卡显示攻击拒绝上升同时LiveCodeBench下降，安全与能力存在任务相关取舍。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2021-10官方A轮超3亿元人民币；2026-07媒体称B1+B2数亿元，未核验一手公告。累计金额未知。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025公开1.5B–32B RealSafe-R1模型；2026融资仅获媒体证据，官网人员及客户规模未按执行日独立核验。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.realai.ai/about">官方起源与团队</a> · <a href="https://www.realai.ai/news/company-news/234.html">2021 A轮官方公告</a> · <a href="https://arxiv.org/abs/2504.10081">RealSafe-R1论文</a> · <a href="https://huggingface.co/RealSafe/RealSafe-R1-7B">7B模型与评测</a></p></div></details>
+    </article><article class="company-entry" id="company-aim-security" data-company-id="aim-security" data-categories="A3 A4" data-regions="以色列" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Aim Security</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 以色列 Tel Aviv；现属 Cato Networks</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">员工公开 AI 使用、内部 AI 应用与 agent 运行时 AI Firewall，以及生命周期姿态。</p>
+      <p class="company-origin" data-field="origin">2022 创立；2024 公开起步，专注企业 GenAI 安全采用。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列 Tel Aviv；现属 Cato Networks</dd></div><div><dt>团队与来源</dt><dd data-field="team">Matan Getz、Adir Gruss；YL Ventures 描述为以色列情报技术与企业安全团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">从员工使用与内部应用接入做策略、DLP 和威胁检测，再与 SASE 的网络执行点结合。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">2025 收购稿中的 early 2026 SASE 整合是当时计划，本次不自动当作已完成。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-06-17 A 轮 $18M，Canaan 领投；交易律师披露当时累计 $28M；并购价未公开。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025-09-03 Cato 宣布已收购；当时 standalone 产品可部署。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.ylventures.com/news-and-insights/blog/ushering-in-the-next-revolution-introducing-aim-holistic-security-for-genai/">投资方团队与起步</a> · <a href="https://www.fenwick.com/insights/experience/fenwick-represents-canaan-partners-in-aim-securitys-18m-series-a-funding">融资交易律师</a> · <a href="https://www.catonetworks.com/news/cato-acquires-aim-security-to-extend-sase-leadership-and-secure-enterprise-ai-transformation/">Cato 收购与产品</a></p></div></details>
+    </article><article class="company-entry" id="company-prompt-security" data-company-id="prompt-security" data-categories="A3 A4" data-regions="美国 以色列" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Prompt Security</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 美国商业市场 / 以色列创始研发团队；现属 SentinelOne</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">Shadow AI 发现、敏感数据防泄露、应用运行时与 MCP gateway 控制。</p>
+      <p class="company-origin" data-field="origin">2023 创业；以员工 GenAI 使用、开发工具和内部应用的安全控制起步。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国商业市场 / 以色列创始研发团队；现属 SentinelOne</dd></div><div><dt>团队与来源</dt><dd data-field="team">Itamar Golan、Lior Drihem；AI 与网络安全产业创始团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">在浏览器、开发助手和应用接入点检查 AI 输入输出，MCP gateway 检查调用、模板和返回。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">只有被接入和可观察的链路能执行策略；MCP 目录规模不等于每台 server 全路径验证。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-11-20 A 轮 $18M，已核 seed+A 合计 $23M；SEC 披露并购现金与股票合计约 $180M。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025-09-05 已完成收购；不能继续按 8 月 intent 标为待交割。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.streetinsider.com/ACCESS%2BNewswire/Prompt%2BSecurity%2BRaises%2B%2418M%2BSeries%2BA%2Bto%2BAccelerate%2BIts%2BMission%2Bto%2BSecure%2BGenAI%2Bin%2BEnterprises/24009444.html">公司 A 轮通讯稿</a> · <a href="https://www.linkedin.com/posts/liord_our-series-a-milestone-im-thrilled-to-announce-activity-7265002197237559298-DaKc">创始人融资声明</a> · <a href="https://www.sentinelone.com/press/sentinelone-to-acquire-prompt-security-to-advance-genai-security/">产品与收购协议</a> · <a href="https://www.sec.gov/Archives/edgar/data/1583708/000110465925088079/tm2525181d1_8k.htm">SEC 交割与对价</a></p></div></details>
+    </article><article class="company-entry" id="company-witnessai" data-company-id="witnessai" data-categories="A3 A4" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">WitnessAI</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 Mountain View；Ballistic Ventures 孵化</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A3">A3 运行时与AI使用治理</a><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">Observe / Control / Protect / Attack，企业 AI 使用治理、数据防护与 agent 行为控制。</p>
+      <p class="company-origin" data-field="origin">2023 开始孵化，2024-05-21 公开起步。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Mountain View；Ballistic Ventures 孵化</dd></div><div><dt>团队与来源</dt><dd data-field="team">Rick Caccia、Gil Spencer、Mathew Solnik、Tarek Tag；安全产品高管与产业工程团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">观测员工、应用与 agent 流量；按策略控制内容和数据流，2026 扩展 traces 与 tool-call governance。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">只有接入的通信与 trace 可观测；模型无关不代表所有执行路径覆盖完整。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-01-13 strategic 融资 $58M；2024 A $27.5M，已核轮次合计至少 $85.5M。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026 公布 agent governance 扩展；覆盖与规模为公司自述。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://witness.ai/about-us/">产业领导团队</a> · <a href="https://www.linkedin.com/posts/msolnik_home-activity-7198728740816736257-2Nb2">技术创始团队本人声明</a> · <a href="https://witness.ai/resources/witnessai-raises-27-5-million-to-enable-safe-use-of-ai/">2024 A 轮与孵化</a> · <a href="https://witness.ai/resources/witnessai-raises-58-million-for-global-expansion-and-announces-new-ways-to-secure-ai-agents/">2026 融资与 agent 功能</a></p></div></details>
+    </article><article class="company-entry" id="company-astrix" data-company-id="astrix" data-categories="A4" data-regions="美国 以色列" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Astrix Security</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · Tel Aviv 创始研发与美国企业市场</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">非人身份/agent 发现、过量权限治理、Agent Control Plane 与 Agent Policies。</p>
+      <p class="company-origin" data-field="origin">2021 成立，非人身份 NHI 安全前史。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">Tel Aviv 创始研发与美国企业市场</dd></div><div><dt>团队与来源</dt><dd data-field="team">Alon Jackson、Idan Gour；官方投资/融资资料列 Unit 8200 背景。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">通过企业平台连接器建立身份与访问视图，检测并治理异常/多余授权；2026 扩展动作政策执行。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">身份发现不等于任务授权；完整行动覆盖和跨平台委托语义还需验证。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-12-10：$45M B，彼时官方累计 $85M；2026-06-29 Cisco 更新收购完成，价格未公开。</dd></div><div><dt>发展状况</dt><dd data-field="development">已加入 Cisco；跨 Duo/Splunk 等平台整合是公告方向，不能笼统称全部已实现。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://astrix.security/learn/news/astrix-raises-45m-series-b-to-redefine-identity-security-for-the-ai-era/">团队与融资</a> · <a href="https://www.prnewswire.com/news-releases/astrix-security-delivers-the-most-comprehensive-ai-agent-discovery-and-enhances-security-with-agent-policy-enforcement-302719653.html">2026 Agent Policies</a> · <a href="https://blogs.cisco.com/news/cisco-announces-intent-to-acquire-astrix-security">Cisco完成更新</a></p></div></details>
+    </article><article class="company-entry" id="company-invariant-labs" data-company-id="invariant-labs" data-categories="A4 A2" data-regions="欧洲" data-team-type="学术" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Invariant Labs</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">学术团队</span> · <span data-field="stage">已收购</span> · 瑞士 ETH Zurich spinout；现属 Snyk</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a></div>
+      <p class="company-product" data-field="product">Contextual Guardrails、MCP-scan 与 agent trace 检查，公开工具投毒和 toxic-flow 研究。</p>
+      <p class="company-origin" data-field="origin">ETH AI Center 衍生团队；2025-06-24 宣布已被 Snyk 收购。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">瑞士 ETH Zurich spinout；现属 Snyk</dd></div><div><dt>团队与来源</dt><dd data-field="team">Marc Fischer、Luca Beurer-Kellner、Martin Vechev、Florian Tramèr；ETH 学术安全团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">将 messages/tool calls/outputs 组成 trace，规则匹配先后与参数；代理层可在工具行动前拦截。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">依赖 trace 完整、hook 与策略覆盖；事件顺序不自动证明程序级真实数据因果。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">融资与并购金额未公开；本次不补估。</dd></div><div><dt>发展状况</dt><dd data-field="development">2025 已加入 Snyk；公开源码和规则文档可核验，未声称本次运行实测。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://snyk.io/news/snyk-acquires-invariant-labs-to-accelerate-agentic-ai-security-innovation/">收购与创始团队</a> · <a href="https://github.com/invariantlabs-ai/invariant/blob/2340fe2d9cd619f73d5b67fa05bf8a08c7cad515/README.md">Guardrails固定提交2340fe2</a> · <a href="https://github.com/invariantlabs-ai/docs/blob/main/docs/mcp-scan/guardrails-reference.md">规则和 trace 文档</a> · <a href="https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks">工具投毒研究</a></p></div></details>
+    </article><article class="company-entry" id="company-oasis" data-company-id="oasis" data-categories="A4" data-regions="美国 以色列" data-team-type="产业" data-status="已收购" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Oasis Security / Cyera Identity</h3><span class="status-pill">已收购</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 以色列团队起源、New York 企业商业入口</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">身份/agent/权限发现、短时访问授权、政策治理；加入 Cyera 数据安全平台。</p>
+      <p class="company-origin" data-field="origin">2022 成立，身份安全前史后扩展 agentic access。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列团队起源、New York 企业商业入口</dd></div><div><dt>团队与来源</dt><dd data-field="team">Danny Brickman、Amit Zimerman；非人身份安全创业，官方当前 about 确认创始身份。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">将 who/what access 与数据敏感性结合，发现权限并约束生命周期；用企业连接器与策略提供控制。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">IAM/DSPM 联合不是 prompt-injection 完整解决；7月拟收购被9月完成事实替代。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-03-19：$120M B，Craft 领投，官方累计 $195M；2026-09-03 Cyera 公告完成 $1B 收购。</dd></div><div><dt>发展状况</dt><dd data-field="development">收购完成、品牌 Cyera Identity；长期产品整合深度需逐模块核验。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.oasis.security/about-us">创始团队</a> · <a href="https://www.oasis.security/blog/next-generation-ai-security-platform">创始人前史</a> · <a href="https://www.newswire.com/news/oasis-security-raises-120m-series-b-to-secure-the-rise-of-enterprise-22748198">B轮原稿</a> · <a href="https://www.cyera.com/press-releases/cyera-completes-acquisition-of-oasis-security">Cyera完成公告</a></p></div></details>
+    </article><article class="company-entry" id="company-token-security" data-company-id="token-security" data-categories="A4" data-regions="以色列 美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Token Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 以色列新创、美国商业市场</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a></div>
+      <p class="company-product" data-field="product">Identity-first AI agent/NHI 治理、生命周期与最小权限。</p>
+      <p class="company-origin" data-field="origin">2023 新创，2026 官方访谈称约两年半公司。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列新创、美国商业市场</dd></div><div><dt>团队与来源</dt><dd data-field="team">Itamar Apelblat、Ido Shlomo；企业身份安全与产品团队，具体全员履历本轮未核。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">公司自述连接 agent 平台和目标业务应用，在两端做治理与 enforcement，避免要求所有流量都过中间 broker。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">架构访谈不是覆盖证明；数据库其他融资线索未获一手确认，不填作现值。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-01-28：$20M A，Notable/TLV Partners；当时累计 $27M，为本轮最后可核金额。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026 继续发布产品和治理资料；未核 ARR、最新完整融资或当前员工数。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.token.security/company/about">团队</a> · <a href="https://www.prnewswire.com/news-releases/token-security-raises-20m-to-secure-enterprises-machine-identities--from-legacy-applications-to-ai-agents-302361620.html">公司融资稿</a> · <a href="https://www.token.security/blog/giving-ai-agents-an-identity-and-a-leash-a-brand-spotlight-itamar-apelblat-and-ido-shlomo-token-security">2026架构说明</a></p></div></details>
+    </article><article class="company-entry" id="company-zenity" data-company-id="zenity" data-categories="A4 A1 A2" data-regions="美国 以色列" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Zenity</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 以色列起源、美国商业市场</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="A4">A4 agent行动、身份与权限</a><a class="pill category-link" href="#directory" data-category="A1">A1 AI资产、模型与供应链</a><a class="pill category-link" href="#directory" data-category="A2">A2 评测与AI红队</a></div>
+      <p class="company-product" data-field="product">AI agent 资产与姿态、可利用暴露测试、Runtime Boundaries、身份与监测。</p>
+      <p class="company-origin" data-field="origin">2021 成立，low-code/no-code 安全前史，后扩展 copilot/agent。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列起源、美国商业市场</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ben Kliger、Michael Bargury；low-code/cloud security 与攻防研究经验，Bargury 持续发表 Black Hat/BlueHat 等研究。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">Surface 建资产/配置/可利用性视图，Enforce 在动作决策点执行策略，Protect 监测后续行为；覆盖 SaaS、自建和 endpoint。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">公开平台机制是厂商描述；跨平台的完整中介、策略例外与实际覆盖未经本档案实测。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-08-03：$125M Series C，Norwest 领投；本轮未确认最新完整累计。</dd></div><div><dt>发展状况</dt><dd data-field="development">独立成长；旧治理控制点向 agent 运行时延伸，当前套餐是公司披露。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://zenity.io/company">团队与前史</a> · <a href="https://zenity.io/platform">当前平台</a> · <a href="https://zenity.io/press-release/zenity-raises-125-million-to-secure-the-era-of-1-billion-ai-agents">2026 C轮</a></p></div></details>
+    </article><article class="company-entry" id="company-aisle" data-company-id="aisle" data-categories="B1 B2" data-regions="美国 欧洲" data-team-type="混合" data-status="独立" data-stage="未知">
+      <div class="company-heading"><h3 data-field="name">AISLE</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">混合团队</span> · <span data-field="stage">未知</span> · 美国 San Francisco + 捷克 Prague</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a><a class="pill category-link" href="#directory" data-category="B2">B2 修复与漏洞管理</a></div>
+      <p class="company-product" data-field="product">源码漏洞发现、triage、补丁PR与验证；Snapshot单次审计只发现/验证，不负责修复。</p>
+      <p class="company-origin" data-field="origin">2025-10-16公开上线；未由本次一手资料确定注册成立年份。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco + 捷克 Prague</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ondrej Vlcek：前Avast CEO；Jaya Baloo：前Rapid7/Avast/KPN CISO；Stanislav Fort：Stanford及DeepMind/Anthropic研究。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">静态推理配合AI-guided fuzzing，自动选target/生成harness与seeds，用sanitizer/libFuzzer/AFL动态检验。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">开发者审补丁并批准merge/部署；可cloud/VPC/on-prem/air-gapped。公开CVE确认不等于全程无人工。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">官方列Jeff Dean、Thomas Wolf等angel；本次未核得官方金额或轮次，不使用数据库估计。</dd></div><div><dt>发展状况</dt><dd data-field="development">已有维护者认可CVE；提供企业平台和开源流程。论文重发现已知CVE的实验有明确scope限制。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://aisle.com/newsroom/press-releases/aisle-emerges-from-stealth">发布与创始团队</a> · <a href="https://aisle.com/platform">产品及部署</a> · <a href="https://arxiv.org/abs/2607.27030v1">HoF-Bench论文v1</a> · <a href="https://curl.se/docs/CVE-2026-80255.html">curl维护者确认</a></p></div></details>
+    </article><article class="company-entry" id="company-escape" data-company-id="escape" data-categories="B1" data-regions="欧洲 美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Escape</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 法国起源；巴黎及旧金山商业布局</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">攻击面发现、业务逻辑感知DAST、AI渗透测试，输出可重现的漏洞利用证据。</p>
+      <p class="company-origin" data-field="origin">2020成立，早于ChatGPT；从API安全扩展为攻击面、DAST与AI渗透测试平台。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">法国起源；巴黎及旧金山商业布局</dd></div><div><dt>团队与来源</dt><dd data-field="team">Tristan Kalos（CEO）与 Antoine Carossio（CTO）2020创办；YC W23，结合API安全、机器学习和渗透测试工程。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">API schema构建资源/接口MetaGraph；语义参数依赖与响应反馈驱动有效请求序列，安全检查验证漏洞；LLM辅助初始请求、错误恢复及业务推理。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">依赖认证、schema和权限判定；请求成功不等于越权已证实。多步推理深度部分仍是发展目标，不能据此声称穷尽业务逻辑。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2023-06种子$3.9m（原公告另列€3.6m）；2026-03 A轮$18m，Balderton领投。未采用简单相加的累计总额。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026-03融资推进完整进攻工作流；公司称2,000+团队采用，未披露可核验付费客户或ARR。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://escape.tech/blog/seed-fundraising-api-security/">成立团队与种子轮</a> · <a href="https://escape.tech/blog/escape-raises-18m-series-a/">2026 A轮与产品</a> · <a href="https://escape.tech/blog/escape-proprietary-algorithm/">公开算法机制</a> · <a href="https://escape.tech/about">公司与地理布局</a></p></div></details>
+    </article><article class="company-entry" id="company-horizon3" data-company-id="horizon3" data-categories="B1" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Horizon3 / NodeZero</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 San Francisco</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">网络、AD、身份和云攻击路径验证，串联弱配置/凭据，提供修复建议和复测，另有WebApp。</p>
+      <p class="company-origin" data-field="origin">2019成立，LLM前自主渗透先行者。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco</dd></div><div><dt>团队与来源</dt><dd data-field="team">Snehal Antani：前JSOC CTO、Splunk CTO、GE Capital CIO；Anthony Pillitiere共同创立，团队含美国特种作战和安全工程人员。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">自主攻击路径引擎配合runner；ADP已文档化用Bedrock/Llama做业务风险语义标记，输出仅advisory。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">用户授权scope和operation类型；内部测试需客户部署host。不能因当前AI-native宣传把全系统推为LLM控制器。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-08-03 E轮 $250M，NightDragon/NEA共同领投，估值 &gt;$2B；2025 D轮 $100M，此处不合算累计。</dd></div><div><dt>发展状况</dt><dd data-field="development">已规模商业化和政府市场部署；生产测试数与组织数为公司自报，不能当新漏洞发现率。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://horizon3.ai/about-us/">团队与成立</a> · <a href="https://horizon3.ai/news/press-release/horizon3-raises-250m-series-e-at-2b-valuation-to-lead-the-ai-vs-ai-cybersecurity-era/">2026 E轮与产品</a> · <a href="https://docs.horizon3.ai/portal/features/advanced_data_pilfering/">真实LLM模块边界</a> · <a href="https://docs.horizon3.ai/api/graphql/?h=schedule">授权scope及操作</a></p></div></details>
+    </article><article class="company-entry" id="company-runsybil" data-company-id="runsybil" data-categories="B1" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">RunSybil</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 San Francisco / New York；远程团队</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">Sybil 对 Web/API 做黑盒、灰盒或自选白盒测试，支持修复后重放原攻击。</p>
+      <p class="company-origin" data-field="origin">2023成立，LLM后新创。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco / New York；远程团队</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ari Herbert-Voss 与 Vlad Ionescu，有 OpenAI / Meta LLM研究经历；团队来自 Mandiant、Trail of Bits 等。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">分层专职agents探索认证、业务逻辑与注入；独立会话重现、critique、误报triage与去重后交付。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">客户给scope、可选凭据与代码；修补通过客户coding assistant/MCP工作流触发，不代表自动部署生产。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-03-18 宣布总融资 $40M，Khosla领投、S32/Anthology Fund等参与；不能写该轮单独 $40M。</dd></div><div><dt>发展状况</dt><dd data-field="development">已有 Cursor、Notion、Baseten 等具名客户案例；无本次可核绝对ARR。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.runsybil.com/careers?ashby_jid=9f668bdf-e5ed-4f7d-8300-117f1ccc2bab">创始团队</a> · <a href="https://www.runsybil.com/platform">产品与验证工作流</a> · <a href="https://www.runsybil.com/blog/runsybil-raises-40m-to-build-the-ai-native-platform-for-offensive-security">2026融资</a> · <a href="https://www.runsybil.com/case-studies/cursor">Cursor案例</a></p></div></details>
+    </article><article class="company-entry" id="company-simbian" data-company-id="simbian" data-categories="B1 B3" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="种子">
+      <div class="company-heading"><h3 data-field="name">Simbian</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">种子</span> · 美国 Mountain View</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">从security copilot扩展到AI SOC、AI Pentest与AI Threat Hunt，共享企业上下文形成SecOps loop。</p>
+      <p class="company-origin" data-field="origin">2024-04-11出隐身；注册成立年本次未核。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Mountain View</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ambuj Kumar：前Fortanix CEO、NVIDIA GPU/加密架构；Alankrit Chona：Twitter、Afterpay、Spotnana工程。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">TrustedLLM多层保护；Context Lake承载环境知识，agent调用安全工具；公司同时公开SOC threat-hunt benchmark。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">用户负责策略与风险决定；本次未完整核2026所有产品的审批/rollback。benchmark与生产准确率自报不可混作实验。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-04-11 seed $10M，Cota/Icon/Firebolt/Rain Capital；本次未核官方更新金额，沉默不表示无融资。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026已发布pentest和threat-hunt agents；有Wipro/SoftBank C&amp;S/NuSummit合作，不据此推收入。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://simbian.ai/press-releases/simbian-emerges-from-stealth-with-10m-to-build-fully-autonomous-security-platform">seed与团队</a> · <a href="https://simbian.ai/press-releases">当前发布索引</a> · <a href="https://arxiv.org/abs/2604.19533v3">CDB固定论文v3</a> · <a href="https://simbian.ai/press-releases/world-s-first-cyber-defense-benchmark-finds-frontier-ll-ms-alone-do-poor-job-at-attack-discovery">产品与benchmark口径</a></p></div></details>
+    </article><article class="company-entry" id="company-tenzai" data-company-id="tenzai" data-categories="B1" data-regions="以色列" data-team-type="产业" data-status="独立" data-stage="种子">
+      <div class="company-heading"><h3 data-field="name">Tenzai</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">种子</span> · 以色列 Tel Aviv；面向北美与欧洲企业市场</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">自主应用渗透，发现与串联业务逻辑弱点，输出可重现利用证据，支持持续测试。</p>
+      <p class="company-origin" data-field="origin">2025成立；2025-11-04公告出隐身，LLM后新创。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">以色列 Tel Aviv；面向北美与欧洲企业市场</dd></div><div><dt>团队与来源</dt><dd data-field="team">Pavel Gurvich、Ariel Zeitlin、Ofri Ziv、Itamar Tal：Guardicore创业团队；Aner Mazur：Snyk founding CPO。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">agentic harness主动探测应用行为，推理身份、信任边界及多步攻击链；详细内部架构未公开。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">客户可设scope、引导测试、查看推理；本次未核到完整命令审批与rollback文档。CTF成绩不能外推企业覆盖。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-11-04 seed $75M，Greylock/Battery/Lux领投、Swish参与；网页页眉11-11，采用正文dateline。</dd></div><div><dt>发展状况</dt><dd data-field="development">已披露早期企业部署与2026攻击案例；性能和客户覆盖为公司/客户自述，无共同协议独立比较。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.tenzai.com/press-releases/tenzai-raises-75-million-in-record-seed-round-to-build-an-ai-hacker-that-secures-code-written-by-ai">团队、成立与seed</a> · <a href="https://www.tenzai.com/">当前产品与scope</a> · <a href="https://www.tenzai.com/press-releases/tenzais-ai-hacker-is-the-first-autonomous-system-to-rank-in-the-top-1-of-global-hacking-competitions">CTF实验口径</a> · <a href="https://www.tenzai.com/blog/one-endpoint-zero-credentials-eight-confirmed-vulnerabilities">2026攻击链案例</a></p></div></details>
+    </article><article class="company-entry" id="company-xbow" data-company-id="xbow" data-categories="B1" data-regions="美国 欧洲" data-team-type="混合" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">XBOW</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">混合团队</span> · <span data-field="stage">成长</span> · 美国 Seattle 总部表述；跨国分布团队</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">自动应用渗透、漏洞利用验证与持续复测，交付可重现攻击证据。</p>
+      <p class="company-origin" data-field="origin">2024年1月成立，LLM后新创。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Seattle 总部表述；跨国分布团队</dd></div><div><dt>团队与来源</dt><dd data-field="team">Oege de Moor：Oxford、Semmle/CodeQL、GitHub Copilot；原 Copilot 工程师与 Nico Waisman 等漏洞研究者。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">LLM攻击 agents 调用工具；独立 validators 复核，结合模型与程序验证，例如用浏览器确认 XSS 实际执行。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">用户定义域、URL和影响展示级别；命令经独立 safety judge 与确定性规则。合规提交与目标选择有人工。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-03-18 C轮 $120M；2026-05-06 追加 $35M，该C轮合计 $155M；公告估值 &gt;$1B。此处不填累计。</dd></div><div><dt>发展状况</dt><dd data-field="development">已商业化；2026扩展渠道及韩国市场。客户与员工规模是公司公告自述。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://xbow.com/blog/xbow-seed-investment">早期团队与seed</a> · <a href="https://xbow.com/blog/top-1-how-xbow-did-it">验证器与HackerOne口径</a> · <a href="https://docs.xbow.com/console/get-started/trust-and-safety/">测试权限控制</a> · <a href="https://xbow.com/news/xbow-secures-additional-35m-from-strategic-investors">2026融资追加与发展</a></p></div></details>
+    </article><article class="company-entry" id="company-aikido" data-company-id="aikido" data-categories="B2 B1" data-regions="欧洲 美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Aikido Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 比利时Ghent起源；拓展美国市场</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B2">B2 修复与漏洞管理</a><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">代码、依赖、云与运行时安全平台；Infinite对部署变更持续渗透、利用验证、生成修复PR并复测。</p>
+      <p class="company-origin" data-field="origin">2022成立；SaaS创业者从开发者噪声与工具整合切入，后加入自主攻击和修复。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">比利时Ghent起源；拓展美国市场</dd></div><div><dt>团队与来源</dt><dd data-field="team">Willem、Roeland、Amber、Felix创办；来自Teamleader、Showpad、Veriff、Cloudbees等SaaS团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">统一代码与运行环境上下文，agent完成攻击—验证—修复闭环。2026 Altar将GLM-5.3量化并剪枝，用于本地安全agent推理。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">Altar实验仅32个已知CVE的定向复现，非盲测发现或完整修复。平台用量、内部增长及模型指标不能视为独立验证的安全覆盖率。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2024-05 A轮$17m；2026-01 B轮$60m，DST Global领投、估值$1bn。早期欧元轮次不换汇累加；累计未在此给出。</dd></div><div><dt>发展状况</dt><dd data-field="development">2026推出Infinite、Altar并收购Root；从工具整合转向持续攻击修复与本地部署。交易金额未披露。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.aikido.dev/blog/aikido-security-raises-eur2-million-pre-seed-round-to-build-a-developer-first-software-security-platform">原始创始团队</a> · <a href="https://www.aikido.dev/blog/aikido-funding-series-b">2026 B轮</a> · <a href="https://www.aikido.dev/blog/introducing-aikido-infinite">Infinite机制</a> · <a href="https://www.aikido.dev/blog/aikido-altar-open-weight-ai-sovereign-security">Altar实现及实验边界</a></p></div></details>
+    </article><article class="company-entry" id="company-corgea" data-company-id="corgea" data-categories="B2 B1" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="种子">
+      <div class="company-heading"><h3 data-field="name">Corgea</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">种子</span> · 美国 San Francisco；Jordan有工程招聘</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B2">B2 修复与漏洞管理</a><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">BLAST AI SAST发现业务逻辑漏洞并生成review-ready fixes；2026扩展code-aware agentic pentesting。</p>
+      <p class="company-origin" data-field="origin">2023成立、YC S23；早期从数据安全转向代码修复。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco；Jordan有工程招聘</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ahmad Sadeddin founder/CEO，第三次创业，前公司被Coupa收购，曾负责payments产品与安全。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">LLM+AST审查；pentest coordinator分配专职agents，结合代码与dependency/context做runtime利用验证和修复复测。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">人审补丁；人类批准scope、rules of engagement和危险测试；单次对人类pentest案例不是同条件benchmark。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025 BLAST官方公告自报seed $2.7M，Shorooq/YC等；2024报道2.5/2.6口径不一，不叠加为不同轮。</dd></div><div><dt>发展状况</dt><dd data-field="development">已代码分析/修补产品；2026-06-24公开agentic pentest，收入与一般性能未独立核。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.ycombinator.com/companies/corgea">YC团队与现产品</a> · <a href="https://corgea.com/blog/introducing-blast-the-future-of-security-testing-is-here">BLAST与融资</a> · <a href="https://corgea.com/newsroom">当前产品和发布日期</a> · <a href="https://news.ycombinator.com/item?id=38928064">创始人PR审批说明</a></p></div></details>
+    </article><article class="company-entry" id="company-zeropath" data-company-id="zeropath" data-categories="B2 B1" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="种子">
+      <div class="company-heading"><h3 data-field="name">ZeroPath</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">种子</span> · 美国 San Francisco</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B2">B2 修复与漏洞管理</a><a class="pill category-link" href="#directory" data-category="B1">B1 发现与攻击验证</a></div>
+      <p class="company-product" data-field="product">自动发现/验证源码漏洞并生成补丁PR；SAST/SCA/secrets/IaC与可编辑应用threat model。</p>
+      <p class="company-origin" data-field="origin">2024成立、YC S24，LLM后新创。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 San Francisco</dd></div><div><dt>团队与来源</dt><dd data-field="team">Dean Valentine与Raphael Karger，后者前Google security/BishopFox；早期团队含Tesla red team和Mevlink退出经验。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">LLM推理配合程序图/代码上下文；2026将持久threat model复用于coding-agent、PR、repo分析和动态测试。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">补丁通过PR review/approval，非直接生产部署；2026-06 threat-model发布标early access，旧架构文已历史化。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">核验日官方招聘页自报seed $12.5M，YC/HOF/SurgePoint/Crosspoint支持；未核对应轮次日期，不套旧$7M。</dd></div><div><dt>发展状况</dt><dd data-field="development">已商业化与公开研究；当前融资/团队数网页口径不同，不用扫描吞吐作效果排名。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.ycombinator.com/companies/zeropath">YC成立与团队</a> · <a href="https://zeropath.com/careers">官方当前融资</a> · <a href="https://zeropath.com/blog/automated-threat-modeling">2026 threat model</a> · <a href="https://eu.zeropath.com/products/sast-autofix">PR修复工作流</a></p></div></details>
+    </article><article class="company-entry" id="company-7ai" data-company-id="7ai" data-categories="B3" data-regions="美国 以色列" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">7AI</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 Boston运营；以色列安全产业/军方背景创始团队</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">自主SOC调查、response和hunt；2026添加Threat Hunt、Threat Intel Hunt、Skills和PLAID ELITE托管服务。</p>
+      <p class="company-origin" data-field="origin">2024成立，2025年2月出隐身。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Boston运营；以色列安全产业/军方背景创始团队</dd></div><div><dt>团队与来源</dt><dd data-field="team">Lior Div与Yonatan Striem-Amit，均Cybereason cofounders；高管来自Tessian/Carbon Black等安全企业。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">专职tool-using agents协作；企业context与skills定制调查，输出来源/证据/行动理由，平台和服务并行。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">People-Led, AI-Driven：客户定act/escalate边界；PLAID ELITE有24/7专家确认，不应当全无人软件。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-12-04 A轮 $130M，Index领投，Blackstone及老股东参与；公告累计 $166M（含seed $36M）。</dd></div><div><dt>发展状况</dt><dd data-field="development">已生产部署；2026托管服务广泛可用。招聘100岗位是计划，investigation计数不等于攻击数。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://7ai.com/company">公司与创始团队</a> · <a href="https://blog.7ai.com/citing-the-agentic-security-inflection-point-7ai-raises-largest-cybersecurity-a-round-in-history-to-bring-ai-security-agents-to-enterprises?hs_amp=true">A轮与累计</a> · <a href="https://blog.7ai.com/threat-hunt-skills-launch">Threat Hunt与Skills</a> · <a href="https://blog.7ai.com/building-a-foundation-for-ai-in-security?hs_amp=true">平台/服务与权限</a></p></div></details>
+    </article><article class="company-entry" id="company-dropzone-ai" data-company-id="dropzone-ai" data-categories="B3" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Dropzone AI</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 Seattle</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">AI SOC Analyst调查现有工具告警，形成证据和判定；扩展 Threat Hunter / Threat Intel Analyst。</p>
+      <p class="company-origin" data-field="origin">2023成立，ChatGPT公开后三个月起步。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Seattle</dd></div><div><dt>团队与来源</dt><dd data-field="team">Edward Wu founder/CEO，曾八年构建 ExtraHop NDR detection engine，从检测工程转向调查自动化。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">agents调用SIEM/EDR/cloud等连接器，自主搜集调查证据；context memory保留环境知识，输出可审阅audit trail。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">客户配置调查策略/outcome rules；现产品可auto-contain，不能用早期read-only表述覆盖当前全部能力。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-07-17 B轮 $37M，Theory领投；官网累计栏与其分轮金额不一致，本档案只写该轮。</dd></div><div><dt>发展状况</dt><dd data-field="development">已production部署与MSSP渠道；增长/节时数字为公司或客户自述，未见绝对ARR审计。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://www.dropzone.ai/company">团队与公司前史</a> · <a href="https://www.dropzone.ai/ai-soc-analyst">产品与当前响应能力</a> · <a href="https://www.dropzone.ai/press-release/dropzone-ai-37m-series-b-funding-ai-soc-agents">B轮融资</a> · <a href="https://www.dropzone.ai/press-release/dropzone-ai-closes-2025-with-11x-arr-growth-fortune-cyber-60-recognition-and-37m-series-b">2025发展总结</a></p></div></details>
+    </article><article class="company-entry" id="company-prophet-security" data-company-id="prophet-security" data-categories="B3" data-regions="美国" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Prophet Security</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国 Palo Alto</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">Agentic AI SOC Analyst调查/判定告警，扩展Threat Hunter与Detection Engineer，给timeline和底层证据。</p>
+      <p class="company-origin" data-field="origin">2023秋BCV Labs孵化，2024-04-23公开。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国 Palo Alto</dd></div><div><dt>团队与来源</dt><dd data-field="team">Kamal Shah CEO与Vibhav Sreekanti CTO在StackRox合作并经历Red Hat收购，分别偏安全产品经营和工程。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">早期文档为alert归一/context向量库+递归planner：选择工具，LLM执行，按新证据更新计划。当前可能已演进。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">分析师可查调查链、复核和反馈；早期决策支持不等同2026响应全手动，具体写权限需按连接器核。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2025-07-29 A轮 $30M，Accel领投；2024 seed $11M。两份披露合计 $41M，不代表核得全部后续融资。</dd></div><div><dt>发展状况</dt><dd data-field="development">已商业化并扩展调查/检测产品；未核当前绝对ARR，初期MTTR来自团队测试。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://baincapitalventures.com/insight/prophet-security-is-using-ai-to-cut-mean-time-to-response-by-10x-for-security-operations-teams/">团队和早期技术机制</a> · <a href="https://www.prophetsecurity.ai/blog/announcing-prophet-security">seed发布</a> · <a href="https://www.prophetsecurity.ai/blog/prophet-security-raises-30-million-series-a-led-by-accel">A轮融资</a> · <a href="https://www.prophetsecurity.ai/about-us">当前产品及团队</a></p></div></details>
+    </article><article class="company-entry" id="company-radiant-security" data-company-id="radiant-security" data-categories="B3" data-regions="美国 以色列" data-team-type="产业" data-status="资产转移" data-stage="已收购">
+      <div class="company-heading"><h3 data-field="name">Radiant Security</h3><span class="status-pill">资产转移</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">已收购</span> · 美国湾区；以色列安全产业团队渊源</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">AI SOC告警调查/triage、可执行response plans与security data lake；AI SOC技术资产转给Cribl。</p>
+      <p class="company-origin" data-field="origin">2021成立，LLM前创立；2023公开AI SOC。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国湾区；以色列安全产业团队渊源</dd></div><div><dt>团队与来源</dt><dd data-field="team">Shahar Ben-Hador与Barry Shteiman；来自Imperva/Exabeam，Shteiman曾负责Exabeam Research &amp; Innovation。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">动态调查与可追溯证据；Cribl收购AI SOC IP，计划将能力作为telemetry平台上的application运行。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">原产品response可手动/自动；交易为技术资产而非已确认整个公司收购，后续独立销售生命周期未核。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2023-11-14 A轮 $15M，Next47领投；2026-08-19 Cribl收购AI SOC技术资产，交易金额未公布。</dd></div><div><dt>发展状况</dt><dd data-field="development">AI SOC技术资产已转Cribl；公告说明正在适配平台，不能冒称所有整合已GA。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://lsvp.com/company/radiant-security/">成立与创始人</a> · <a href="https://next47.com/using-ai-to-reinvent-security-prioritization/">Next47团队/融资</a> · <a href="https://www.radiantsecurity.org/">原产品</a> · <a href="https://cribl.io/news/cribl-advances-ai-powered-security-operations-with-new-ai-soc-acquisition/">Cribl资产交易</a></p></div></details>
+    </article><article class="company-entry" id="company-torq" data-company-id="torq" data-categories="B3" data-regions="美国 以色列 欧洲" data-team-type="产业" data-status="独立" data-stage="成长">
+      <div class="company-heading"><h3 data-field="name">Torq</h3><span class="status-pill">独立</span></div>
+      <p class="company-context"><span data-field="teamType">产业团队</span> · <span data-field="stage">成长</span> · 美国与以色列经营/研发，分布加拿大和欧洲</p>
+      <div class="company-tags" data-field="categories" aria-label="产品控制点"><a class="pill category-link" href="#directory" data-category="B3">B3 SOC调查与响应</a></div>
+      <p class="company-product" data-field="product">自动化连接器扩展为Agentic AI SOC：triage、case management、response和自选agent/workflow builder。</p>
+      <p class="company-origin" data-field="origin">2020成立，LLM前hyperautomation前史。</p>
+      <details class="company-details" open><summary>查看团队、机制、融资与来源</summary><div class="company-detail-body"><dl class="company-fields"><div><dt>地理</dt><dd data-field="regionText">美国与以色列经营/研发，分布加拿大和欧洲</dd></div><div><dt>团队与来源</dt><dd data-field="team">Ofer Smadari、Leonid Belkind、Eldad Livni；Luminate/Zero Trust连续创业，前企业安全产品团队。</dd></div><div><dt>技术机制</dt><dd data-field="mechanism">agent决策接workflow execution fabric；2026收购Jit补Context Graph的时效、provenance、policy及decision trace。</dd></div><div><dt>证据与边界</dt><dd data-field="boundary">客户policy/threshold控制containment动作；不能把自然语言生成与执行成功混同，审批依工作流设置。</dd></div><div><dt>融资与交易</dt><dd data-field="funding">2026-01-12 D轮 $140M，Merlin领投；公告累计 $332M、估值 $1.2B。2026 ARR目标不等于已实现。</dd></div><div><dt>发展状况</dt><dd data-field="development">已企业商业化；2026发布Agentic Builder并收购Jit。自动化动作计数不能当完整调查数。</dd></div></dl><p class="source source-links" data-field="sources"><a href="https://torq.io/company/">团队与成立</a> · <a href="https://torq.io/news/torq-seriesD/">D轮与发展</a> · <a href="https://torq.io/news/agentic-builder/">Agentic Builder</a> · <a href="https://torq.io/blog/torq-acquires-jit/">Jit收购和机制</a></p></div></details>
+    </article></div>
+</section>
+
+<section id="compare"><div class="section-head"><span class="number">03</span><div><h2>两家公司，放到同一组问题中</h2><p class="lede">默认比较内容检测与轨迹策略。可以改成两家漏洞或SOC公司，观察它们是否真的交付同一种结果。</p></div></div>
+<div class="compare-controls"><label for="compare-left">左侧公司<select class="enhance-control" id="compare-left" disabled><option value="7ai">7AI</option><option value="aikido">Aikido Security</option><option value="aim-security">Aim Security</option><option value="aisle">AISLE</option><option value="astrix">Astrix Security</option><option value="corgea">Corgea</option><option value="dropzone-ai">Dropzone AI</option><option value="enkrypt-ai">Enkrypt AI</option><option value="escape">Escape</option><option value="giskard">Giskard</option><option value="hiddenlayer">HiddenLayer</option><option value="horizon3">Horizon3 / NodeZero</option><option value="invariant-labs" selected>Invariant Labs</option><option value="lakera">Lakera</option><option value="lasso-security">Lasso Security</option><option value="mindgard">Mindgard</option><option value="noma-security">Noma Security</option><option value="oasis">Oasis Security / Cyera Identity</option><option value="pillar-security">Pillar Security</option><option value="prompt-security">Prompt Security</option><option value="prophet-security">Prophet Security</option><option value="protect-ai">Protect AI</option><option value="radiant-security">Radiant Security</option><option value="robust-intelligence">Robust Intelligence</option><option value="runsybil">RunSybil</option><option value="simbian">Simbian</option><option value="tenzai">Tenzai</option><option value="token-security">Token Security</option><option value="torq">Torq</option><option value="virtue-ai">Virtue AI</option><option value="witnessai">WitnessAI</option><option value="xbow">XBOW</option><option value="zenity">Zenity</option><option value="zeropath">ZeroPath</option><option value="gentel">君同未来 GenTel</option><option value="realai">瑞莱智慧 RealAI</option></select></label><label for="compare-right">右侧公司<select class="enhance-control" id="compare-right" disabled><option value="7ai">7AI</option><option value="aikido">Aikido Security</option><option value="aim-security">Aim Security</option><option value="aisle">AISLE</option><option value="astrix">Astrix Security</option><option value="corgea">Corgea</option><option value="dropzone-ai">Dropzone AI</option><option value="enkrypt-ai">Enkrypt AI</option><option value="escape">Escape</option><option value="giskard">Giskard</option><option value="hiddenlayer">HiddenLayer</option><option value="horizon3">Horizon3 / NodeZero</option><option value="invariant-labs">Invariant Labs</option><option value="lakera" selected>Lakera</option><option value="lasso-security">Lasso Security</option><option value="mindgard">Mindgard</option><option value="noma-security">Noma Security</option><option value="oasis">Oasis Security / Cyera Identity</option><option value="pillar-security">Pillar Security</option><option value="prompt-security">Prompt Security</option><option value="prophet-security">Prophet Security</option><option value="protect-ai">Protect AI</option><option value="radiant-security">Radiant Security</option><option value="robust-intelligence">Robust Intelligence</option><option value="runsybil">RunSybil</option><option value="simbian">Simbian</option><option value="tenzai">Tenzai</option><option value="token-security">Token Security</option><option value="torq">Torq</option><option value="virtue-ai">Virtue AI</option><option value="witnessai">WitnessAI</option><option value="xbow">XBOW</option><option value="zenity">Zenity</option><option value="zeropath">ZeroPath</option><option value="gentel">君同未来 GenTel</option><option value="realai">瑞莱智慧 RealAI</option></select></label></div>
+<p class="small js-hint" id="compare-status" role="status" aria-live="polite">当前：Invariant Labs 与 Lakera。资料来自上方同一组静态条目。</p>
+<div class="table-wrap"><table class="comparison-table"><caption class="small">机制对照；不构成绩效排名，也不替代同条件产品测试</caption><thead><tr><th scope="col">比较维度</th><th scope="col" id="compare-left-name">Invariant Labs</th><th scope="col" id="compare-right-name">Lakera</th></tr></thead><tbody><tr><th scope="row">控制点</th><td data-compare="left-categories">A4 agent行动、身份与权限；A2 评测与AI红队</td><td data-compare="right-categories">A2 评测与AI红队；A3 运行时与AI使用治理</td></tr><tr><th scope="row">交付物</th><td data-compare="left-product">Contextual Guardrails、MCP-scan 与 agent trace 检查，公开工具投毒和 toxic-flow 研究。</td><td data-compare="right-product">Lakera Guard 的提示攻击、内容、泄露与链接防护；Lakera Red 持续对抗评测。</td></tr><tr><th scope="row">技术机制</th><td data-compare="left-mechanism">将 messages/tool calls/outputs 组成 trace，规则匹配先后与参数；代理层可在工具行动前拦截。</td><td data-compare="right-mechanism">低延迟检测 API 与可配置策略，结合 Gandalf 和研究攻击数据更新防护；Red 可连接有状态 agent。</td></tr><tr><th scope="row">适用边界</th><td data-compare="left-boundary">依赖 trace 完整、hook 与策略覆盖；事件顺序不自动证明程序级真实数据因果。</td><td data-compare="right-boundary">API 检测效果为厂商自述；接入 Guard 不自动建立最小权限或完整 agent 状态控制。</td></tr><tr><th scope="row">团队来源</th><td data-compare="left-team">Marc Fischer、Luca Beurer-Kellner、Martin Vechev、Florian Tramèr；ETH 学术安全团队。</td><td data-compare="right-team">David Haber、Mateo Rojas-Carulla、Matthias Kraft；收购方称创始团队有 Google/Meta AI 背景。</td></tr><tr><th scope="row">融资口径</th><td data-compare="left-funding">融资与并购金额未公开；本次不补估。</td><td data-compare="right-funding">2024-07-24 A 轮 $20M，当时累计 $30M；Check Point 披露收购约 $190M 净现金。</td></tr><tr><th scope="row">当前发展</th><td data-compare="left-development">2025 已加入 Snyk；公开源码和规则文档可核验，未声称本次运行实测。</td><td data-compare="right-development">Q4 2025 已完成收购；当前技术文档已使用 Check Point AI Security 品牌。</td></tr><tr><th scope="row">原始材料</th><td data-compare="left-sources"><a href="https://snyk.io/news/snyk-acquires-invariant-labs-to-accelerate-agentic-ai-security-innovation/">收购与创始团队</a> · <a href="https://github.com/invariantlabs-ai/invariant/blob/2340fe2d9cd619f73d5b67fa05bf8a08c7cad515/README.md">Guardrails固定提交2340fe2</a> · <a href="https://github.com/invariantlabs-ai/docs/blob/main/docs/mcp-scan/guardrails-reference.md">规则和 trace 文档</a> · <a href="https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks">工具投毒研究</a></td><td data-compare="right-sources"><a href="https://www.checkpoint.com/press-releases/check-point-acquires-lakera-to-deliver-end-to-end-ai-security-for-enterprises/">团队与收购协议</a> · <a href="https://www.checkpoint.com/press-releases/check-point-software-reports-fourth-quarter-and-2025-full-year-results/">完成交易与净现金</a> · <a href="https://www.hpcwire.com/aiwire/2024/07/24/lakera-raises-20m-series-a-to-secure-generative-ai-applications/">A 轮公司通讯稿</a> · <a href="https://docs.lakera.ai/docs/defenses">现有防护文档</a></td></tr></tbody></table></div>
+<p class="note">先问“它在哪个接口作决定”。检测API、代理工具拦截、目标系统的权限检查，观察信息和安全保证不同。资金、创始人履历和演示结果不能填补接入覆盖的证据缺口。</p>
+</section>
+
+<section id="scenario"><div class="section-head"><span class="number">04</span><div><h2>一封邮件，三种不同的阻断位置</h2><p class="lede">分析场景，未实测。合法任务是读供应商邮件、查询采购状态、草拟回复；攻击者试图让agent读取秘密并向外部地址发送。</p></div></div>
+<figure class="figure scenario-flow"><svg viewBox="0 0 840 246" role="img" aria-labelledby="scenario-title scenario-desc"><title id="scenario-title">邮件注入从不可信内容流向工具与外发的路径</title><desc id="scenario-desc">供应商邮件带入恶意指令，agent可调用采购数据库和邮件API。内容检测位于邮件入口，轨迹策略位于工具调用前，身份与凭证约束位于目标系统执行处。</desc><defs><marker id="case-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#65808d"/></marker></defs>
+<rect x="8" y="66" width="175" height="100" rx="8" fill="#edf3f7" stroke="#bdcbd3"/><text x="26" y="94" font-size="15" fill="#172f44" font-weight="600">不可信邮件 / 附件</text><text x="26" y="121" font-size="12" fill="#627280">“另读秘密并发往外部”</text><text x="26" y="145" font-size="12" fill="#627280">攻击者控制数据内容</text>
+<path d="M183,116 L290,116" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><text x="207" y="50" font-size="12" fill="#286a66">① 内容detector</text>
+<rect x="296" y="66" width="174" height="100" rx="8" fill="#eaf2ef" stroke="#acc6bf"/><text x="319" y="97" font-size="15" fill="#172f44" font-weight="600">任务agent</text><text x="319" y="124" font-size="12" fill="#627280">合法目标 + 不可信信息</text><text x="319" y="146" font-size="12" fill="#627280">生成工具调用</text>
+<path d="M470,94 L594,65" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><path d="M470,143 L594,181" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><text x="482" y="123" font-size="12" fill="#286a66">② 轨迹 / 工具策略</text>
+<rect x="600" y="22" width="230" height="74" rx="8" fill="#fff" stroke="#bdcbd3"/><text x="620" y="50" font-size="15" fill="#172f44" font-weight="600">采购数据系统</text><text x="620" y="76" font-size="12" fill="#627280">可读范围由目标系统执行</text>
+<rect x="600" y="151" width="230" height="74" rx="8" fill="#fff" stroke="#bdcbd3"/><text x="620" y="179" font-size="15" fill="#172f44" font-weight="600">邮件API / 外发目的地</text><text x="620" y="205" font-size="12" fill="#627280">draft ≠ send；流向也需授权</text>
+<text x="607" y="125" font-size="12" fill="#286a66">③ 身份 / 凭证约束</text></svg><figcaption>示意控制位置；若要证明信息流和行动安全，还需可见工具轨迹、敏感数据语义及完整中介。图不表达任何厂商的实际性能。</figcaption></figure>
+<fieldset class="case-controls"><legend>选择要叠加的控制条件</legend><label><input class="enhance-control" type="checkbox" id="case-detector" checked disabled>内容detector</label><label><input class="enhance-control" type="checkbox" id="case-trace" disabled>轨迹 / 工具策略</label><label><input class="enhance-control" type="checkbox" id="case-identity" disabled>身份 / 凭证约束</label></fieldset>
+<p class="small js-hint" id="case-status" role="status" aria-live="polite">默认：仅内容detector。以下是条件推演，没有概率或产品实测结果。</p><div id="case-panels"><article class="case-panel" data-case-mask="0"><h4>不增加这三类控制</h4><p>如果agent服从邮件中的恶意指令，且继承的数据库与邮件凭证允许读取和发送，就存在外泄路径。模型是否服从注入仍是变量；本例没有测量成功率。</p><p class="case-limit"><strong>验收重点：</strong>默认允许的工具能力大于“草拟回复”所需能力。</p></article><article class="case-panel" data-case-mask="1"><h4>仅内容detector</h4><p>在邮件进入上下文前检查。命中规则或分类器时可阻断；漏检时，原有读表与外发路径仍在。对正常长邮件误报也可能打断合法任务。</p><p class="case-limit"><strong>验收重点：</strong>检测“像不像攻击”没有改变动作授权。</p></article><article class="case-panel" data-case-mask="2"><h4>仅轨迹/工具策略</h4><p>假设所有相关tool calls均受中介：识别“读敏感表→向未批准目的地发送”的组合，在发送前拒绝。邮件是否被detector识别不影响这条规则。</p><p class="case-limit"><strong>验收重点：</strong>遗漏hook、标签或历史状态，或策略无法表达业务例外，都会改变结果。</p></article><article class="case-panel" data-case-mask="3"><h4>detector＋轨迹策略</h4><p>先减少恶意内容进入上下文，再于工具执行前检查敏感读取与外发关系。detector漏检时仍有执行约束；规则漏覆盖时detector仍只提供概率性帮助。</p><p class="case-limit"><strong>验收重点：</strong>覆盖和策略质量决定组合效果；不能把两个宣传指标直接相乘。</p></article><article class="case-panel" data-case-mask="4"><h4>仅身份/凭证约束</h4><p>按合法任务只授予采购状态查询和草稿创建权限，不授予send动作，示例的实际外发被阻断。如果业务确需发送邮件，身份有效仍不说明目的地和内容被允许。</p><p class="case-limit"><strong>验收重点：</strong>最小权限与短时凭证缩小可执行范围；需验证权限是否确实由目标系统执行。</p></article><article class="case-panel" data-case-mask="5"><h4>detector＋身份约束</h4><p>内容检查降低被注入的机会；即使漏检，草稿任务的身份没有send权限。若后续业务扩大授权，必须重新检查新增的数据与输出路径。</p><p class="case-limit"><strong>验收重点：</strong>这是限定任务和权限下的分析，不能泛化为所有邮件agent安全。</p></article><article class="case-panel" data-case-mask="6"><h4>轨迹策略＋身份约束</h4><p>凭证先限制资源与动作，策略再检查被允许动作的上下文、历史和目的地。对确需发送的其他任务，可把允许身份与允许流向分别验收。</p><p class="case-limit"><strong>验收重点：</strong>策略引擎必须看到实际动作，凭证不能被旁路工具替换。</p></article><article class="case-panel" data-case-mask="7"><h4>三类控制组合</h4><p>内容检查、执行前轨迹策略、最小权限各负责一层；在本例假设下形成互补。仍需测试间接渠道、派生敏感数据、合法例外、误报与任务完成率。</p><p class="case-limit"><strong>验收重点：</strong>组合不是无条件保证；本页没有运行或测试任何厂商产品。</p></article></div>
+<p class="source">进一步阅读：<a href="https://arxiv.org/abs/2406.13352">AgentDojo：同时评估合法任务与攻击目标</a>；<a href="https://arxiv.org/abs/2503.18813">CaMeL：受控执行与信息流</a>；<a href="https://github.com/google-research/camel-prompt-injection">作者代码</a>。论文保证依赖其策略、解释器与中介假设，本页未复现。</p>
+</section>
+
+<section id="development"><div class="section-head"><span class="number">05</span><div><h2>从点能力，到已有平台的控制面</h2><p class="lede">2024—2026的交易改变了可加入、可采购和可研究的团队归属。收购完成、拟收购、技术资产转移与后续整合，需要逐项区分。</p></div></div>
+<div class="table-wrap"><table><caption class="small">本页相关交易；金额口径不统一，不按大小排名</caption><thead><tr><th scope="col">时间 / 状态</th><th scope="col">团队 / 买方</th><th scope="col">交易范围与平台方向</th><th scope="col">金额及依据</th></tr></thead><tbody><tr><td>2026-09-03</td><th scope="row">Oasis → Cyera</th><td>整个公司收购完成；Cyera Identity</td><td>$1B收购，与此前$195M融资区分<br><a class="source" href="https://www.cyera.com/press-releases/cyera-completes-acquisition-of-oasis-security">官方依据</a></td></tr><tr><td>2026-08-19</td><th scope="row">Radiant → Cribl</th><td>AI SOC技术、IP等资产转移；非整个法人收购</td><td>金额未披露<br><a class="source" href="https://cribl.io/news/cribl-advances-ai-powered-security-operations-with-new-ai-soc-acquisition/">官方依据</a></td></tr><tr><td>2026-08-17</td><th scope="row">Virtue AI → Fortinet</th><td>公告称已收购；连续AI防护方向</td><td>条款未披露<br><a class="source" href="https://www.fortinet.com/corporate/about-us/newsroom/press-releases/2026/fortinet-advances-continuous-ai-protection-with-the-acquisition-of-virtue-ai">官方依据</a></td></tr><tr><td>2026-08-04</td><th scope="row">Enkrypt AI → Anaconda</th><td>已收购；结合agent开发与模型治理</td><td>金额未披露<br><a class="source" href="https://www.anaconda.com/press/anaconda-acquires-enkrypt-ai">官方依据</a></td></tr><tr><td>2026-06-30</td><th scope="row">Root → Aikido</th><td>已收购；依赖漏洞研究、修复及backport</td><td>金额未披露<br><a class="source" href="https://www.globenewswire.com/news-release/2026/06/30/3319854/0/en/aikido-acquires-root-to-defend-open-source-from-ai-powered-attacks.html">官方依据</a></td></tr><tr><td>2026-06-29完成更新</td><th scope="row">Astrix → Cisco</th><td>已收购；身份与agent控制平面</td><td>价格未公开<br><a class="source" href="https://blogs.cisco.com/news/cisco-announces-intent-to-acquire-astrix-security">官方依据</a></td></tr><tr><td>2026公开公告</td><th scope="row">Jit → Torq</th><td>已收购；Jit Context Graph加入编排平台</td><td>金额未披露<br><a class="source" href="https://torq.io/blog/torq-acquires-jit/">官方依据</a></td></tr><tr><td>2025 Q4完成</td><th scope="row">Lakera → Check Point</th><td>完成收购；当前AI Security品牌</td><td>约$190M净现金口径<br><a class="source" href="https://www.checkpoint.com/press-releases/check-point-software-reports-fourth-quarter-and-2025-full-year-results/">官方依据</a></td></tr><tr><td>2025-09-05</td><th scope="row">Prompt Security → SentinelOne</th><td>完成交割；员工AI使用与应用控制</td><td>现金与股票合计约$180M<br><a class="source" href="https://www.sec.gov/Archives/edgar/data/1583708/000110465925088079/tm2525181d1_8k.htm">官方依据</a></td></tr><tr><td>2025-09-03</td><th scope="row">Aim → Cato Networks</th><td>公告称已收购；与SASE执行点结合</td><td>金额未公开；整合计划需另核<br><a class="source" href="https://www.catonetworks.com/news/cato-acquires-aim-security-to-extend-sase-leadership-and-secure-enterprise-ai-transformation/">官方依据</a></td></tr><tr><td>2025-07-22</td><th scope="row">Protect AI → Palo Alto Networks</th><td>完成收购；Prisma AIRS</td><td>$635M对价（SEC）<br><a class="source" href="https://www.sec.gov/Archives/edgar/data/1327567/000132756726000023/panw-20260731.htm">官方依据</a></td></tr><tr><td>2025-06-24</td><th scope="row">Invariant → Snyk</th><td>已收购；agent工具与上下文安全</td><td>金额未披露<br><a class="source" href="https://snyk.io/news/snyk-acquires-invariant-labs-to-accelerate-agentic-ai-security-innovation/">官方依据</a></td></tr><tr><td>2024完成</td><th scope="row">Robust Intelligence → Cisco</th><td>已收购；AI Defense基础</td><td>官方未确认金额<br><a class="source" href="https://www.cisco.com/site/us/en/products/security/ai-defense/robust-intelligence-is-part-of-cisco/index.html">官方依据</a></td></tr></tbody></table></div>
+<div class="grid2"><div class="card"><h3>把AI安全接到已有控制点</h3><p>网络、身份、终端和开发平台购买检测、评测或行动控制能力。已有流量与企业连接器能帮助分发，但产品“进入平台”不说明每个模块已被完整整合。</p><p class="small">例：Cisco的Robust Intelligence/Astrix，Check Point的Lakera，Snyk的Invariant。</p></div><div class="card"><h3>把安全工作闭环接到已有数据</h3><p>开发平台需要代码、运行环境与补丁验收；SOC平台需要连接器、遥测与响应编排。模型进步之外，客户上下文、执行接口和结果验证构成产品差异。</p><p class="small">例：Aikido/Root，Torq/Jit，Cribl/Radiant技术资产。</p></div></div>
+<p class="note"><strong>补充并购对照：</strong>以下两项不计入36家主体样本，用于观察应用交付与endpoint/SOC两种平台入口。</p>
+<div class="grid2" id="platform-context">
+<article class="card" id="context-calypso"><h3>CalypsoAI → F5</h3><p>2018年起步，创始人包括Neil Serebryany；属于LLM前史。2023-06-27融资$23M A-1、当时累计$38.2M，最新完整累计未确认。</p><p>SEC季报确认2025-09-26交割、<strong>$145.2M现金</strong>。9月29日已发布F5 AI Guardrails / AI Red Team品牌，将应用红队和运行时检查向应用交付平台整合。购买对价口径不沿用签约headline，产品发布也不能证明所有路径已受控。</p><p class="source"><a href="https://www.paladincapgroup.com/calypsoai-raises-23-million-from-paladin-capital-group-and-strategic-investors-to-drive-secure-enterprise-adoption-of-generative-ai-and-large-language-models/">投资方团队与融资</a> · <a href="https://www.sec.gov/Archives/edgar/data/1048695/000104869526000051/R11.htm">2026-03-31季报</a> · <a href="https://www.f5.com/company/blog/what-are-ai-guardrails">F5产品发布</a></p></article>
+<article class="card" id="context-pangea"><h3>Pangea → CrowdStrike</h3><p>Oliver Friedrichs、Sourabh Satish有Phantom/Splunk背景，从可组合安全API扩展AI Guard / Prompt Guard。2022年底B轮$26M、当时累计超过$52M；最新完整累计未确认。</p><p>10-K确认2025-09-26收购全部股权：<strong>$212.1M净现金＋$10.6M购前替代奖励</strong>。2025-12-15 Falcon AIDR已GA，开发者防护进入endpoint/SOC分发体系。厂商的全链路保护表述，仍需验收接入覆盖和效果。</p><p class="source"><a href="https://pangea.cloud/company/">团队</a> · <a href="https://pangea.cloud/blog/redefining-security-in-2023-and-beyond/">融资回顾</a> · <a href="https://pangea.cloud/blog/pangea-unveils-suite-of-ai-security-guardrails-and-jailbreak-competition/">防护产品</a> · <a href="https://www.sec.gov/Archives/edgar/data/1535527/000153552726000010/crwd-20260131.htm">SEC第12注</a> · <a href="https://www.crowdstrike.com/en-us/press-releases/crowdstrike-announces-general-availability-of-falcon-ai-detection-and-response/">AIDR正式可用</a></p></article>
+</div>
+<p class="note">资金是资本供给的证据。客户logo、团队数、估值和融资阶段都不能替代ARR、续约、单位任务成本与实际生产覆盖。这些数据多数未公开，本页保留未知。</p>
+</section>
+
+<section id="questions"><div class="section-head"><span class="number">06</span><div><h2>把行业观察转成可测的问题</h2><p class="lede">下面是候选研究和创业验证问题，尚未做完整的新颖性审查。先选择一个真实工作流，再确定技术手段。</p></div></div>
+<ol class="research-paths"><li><h3>任务授权，能否成为可执行且可撤销的边界？</h3><p>身份图回答“有什么权限”；用户任务还涉及“为什么、何时、为谁”。把任务、委托、资源和外发目的地串成一条可审计链。</p><div class="question-meta"><span><strong>观察对象</strong>Invariant / Zenity / Astrix / Token / Oasis</span><span><strong>应测证据</strong>合法任务效用、越权阻断、撤销与旁路</span><span><strong>首要取舍</strong>策略维护和完整中介成本</span></div></li>
+<li><h3>安全发现，能否到达修复验收？</h3><p>区分候选、历史重现、盲测新发现、客户环境验证与补丁验收。把PoC、去重、补丁、回归和开发者接受绑定起来。</p><div class="question-meta"><span><strong>观察对象</strong>XBOW / RunSybil / AISLE / Escape / Aikido</span><span><strong>应测证据</strong>有效PoC、失败分布、修复后复测与成本</span><span><strong>首要取舍</strong>真实目标、状态副作用及披露约束</span></div></li>
+<li><h3>SOC agent，能否把“未知”保留到结案？</h3><p>攻击者可能污染日志字段、邮件和工具返回。将查询正确性、证据完整性与响应安全性分别评估，避免把流畅报告误当正确调查。</p><div class="question-meta"><span><strong>观察对象</strong>Dropzone / Prophet / 7AI / Simbian / Torq</span><span><strong>应测证据</strong>误结案、人工重开、工具错误与污染回放</span><span><strong>首要取舍</strong>吞吐、遥测质量与误操作代价</span></div></li>
+<li><h3>私有部署和模型压缩，牺牲了哪些长尾能力？</h3><p>以Aikido Altar为例：公开32个已知CVE的定向重发现实验可以启发测试，但不能替代新漏洞探索或完整修复评测。</p><div class="question-meta"><span><strong>观察对象</strong>本地模型 / 私有客户环境 / 领域评测</span><span><strong>应测证据</strong>长程工具链、稀有类别、同任务成本</span><span><strong>首要取舍</strong>数据驻留、硬件成本与尾部失败</span></div><p class="source"><a href="https://www.aikido.dev/blog/aikido-altar-open-weight-ai-sovereign-security">Altar公开实验及范围</a></p></li></ol>
+<div class="note green"><p>职业选择按实际工作内容判断：评测团队重攻击与测量；行动/身份团队重系统与企业接口；漏洞团队重探索和验证；SOC团队重数据、调查与交付。被收购团队应重新核对研究发表与产品路线。</p><p>创业验证先回答：谁有损失和预算、现有控制点为何接不住、客户如何验收、数据与权限如何取得。先用具体设计伙伴和付费试点检验需求。</p></div>
+<p class="small">地域边界：中国样本包含君同未来及2018成立的瑞莱对照；欧洲包含Giskard、Escape、Aikido等不同路线。公开渠道披露密度有差异，本页不据名单数量推断任何地区的市场或技术强弱。</p>
+<p class="source">更完整的公司前史、区域讨论、实验口径和资料更新说明见同档案Markdown阅读页；独立HTML负责重新组织理解路径。后续按档案约定保留历史版本。</p>
+</section>
+
+      </div>
+    </main>
+  </div>
+  <!-- archive:footer:start -->
+<footer class="site-footer archive-footer">
+  <div class="footer-inner archive-footer-inner">
+    <span class="footer-copy">ai-for-exploration <span class="footer-dot">/</span> 持续探索，保留来路</span>
+    <a href="https://github.com/brant-ruan/ai-for-exploration">源文件与修订记录 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div>
+</footer>
+<!-- archive:footer:end -->
+  <script>
+    
+(() => {
+  'use strict';
+  const entries = Array.from(document.querySelectorAll('.company-entry'));
+  const searchable = new Map(entries.map(entry => [entry, entry.textContent.toLocaleLowerCase()]));
+  const allDetails = entries.map(e => e.querySelector('.company-details'));
+  const controls = {category:document.getElementById('category-filter'), region:document.getElementById('region-filter'), team:document.getElementById('team-filter'), status:document.getElementById('status-filter'), stage:document.getElementById('stage-filter'), search:document.getElementById('company-search')};
+  document.querySelectorAll('.enhance-control').forEach(control => { control.disabled = false; });
+  allDetails.forEach(detail => { detail.open = false; });
+  const inList = (value, query) => !query || value.split(' ').includes(query);
+  function filterCompanies() {
+    const needle = controls.search.value.trim().toLocaleLowerCase();
+    let count = 0;
+    entries.forEach(entry => {
+      const show = inList(entry.dataset.categories, controls.category.value) && inList(entry.dataset.regions, controls.region.value) && (!controls.team.value || entry.dataset.teamType === controls.team.value) && (!controls.status.value || entry.dataset.status === controls.status.value) && (!controls.stage.value || entry.dataset.stage === controls.stage.value) && (!needle || searchable.get(entry).includes(needle));
+      entry.hidden = !show;
+      if (show) count++;
+    });
+    document.getElementById('filter-result').textContent = '显示 ' + count + ' / ' + entries.length + ' 家；地区和控制点可多归属';
+    document.getElementById('no-results').hidden = count !== 0;
+  }
+  Object.values(controls).forEach(control => control.addEventListener(control.type === 'search' ? 'input' : 'change', filterCompanies));
+  document.getElementById('company-filters').addEventListener('submit', event => { event.preventDefault(); filterCompanies(); });
+  document.getElementById('reset-filters').addEventListener('click', () => { Object.values(controls).forEach(c => { c.value = ''; }); filterCompanies(); });
+  document.getElementById('expand-details').addEventListener('click', () => entries.filter(e => !e.hidden).forEach(e => { e.querySelector('details').open = true; }));
+  document.getElementById('collapse-details').addEventListener('click', () => entries.filter(e => !e.hidden).forEach(e => { e.querySelector('details').open = false; }));
+  document.querySelectorAll('[data-category]').forEach(link => link.addEventListener('click', () => { controls.category.value = link.dataset.category; filterCompanies(); }));
+  const findEntry = id => entries.find(entry => entry.dataset.companyId === id);
+  const getField = (entry, name) => entry.querySelector('[data-field="' + name + '"]');
+  const compareFields = ['categories','product','mechanism','boundary','team','funding','development','sources'];
+  function updateComparison() {
+    ['left','right'].forEach(side => {
+      const entry = findEntry(document.getElementById('compare-' + side).value);
+      document.getElementById('compare-' + side + '-name').textContent = getField(entry, 'name').textContent;
+      compareFields.forEach(field => {
+        const cell = document.querySelector('[data-compare="' + side + '-' + field + '"]');
+        const original = getField(entry, field);
+        cell.replaceChildren();
+        if (field === 'sources') original.childNodes.forEach(node => cell.appendChild(node.cloneNode(true)));
+        else if (field === 'categories') cell.textContent = Array.from(original.querySelectorAll('.pill')).map(link => link.textContent.trim()).join('；');
+        else cell.textContent = original.textContent.trim();
+      });
+    });
+    const left = document.getElementById('compare-left-name').textContent;
+    const right = document.getElementById('compare-right-name').textContent;
+    document.getElementById('compare-status').textContent = left === right ? '两侧当前为同一家公司：' + left + '。可选择另一家公司。' : '当前：' + left + ' 与 ' + right + '。比较同一份静态资料，不作性能排名。';
+  }
+  document.getElementById('compare-left').addEventListener('change', updateComparison);
+  document.getElementById('compare-right').addEventListener('change', updateComparison);
+  const caseInputs = [document.getElementById('case-detector'),document.getElementById('case-trace'),document.getElementById('case-identity')];
+  const casePanels = Array.from(document.querySelectorAll('.case-panel'));
+  function updateCase() {
+    const mask = caseInputs.reduce((value, input, i) => value + (input.checked ? 1 << i : 0), 0);
+    casePanels.forEach(panel => { panel.hidden = Number(panel.dataset.caseMask) !== mask; });
+    const panel = casePanels.find(p => Number(p.dataset.caseMask) === mask);
+    document.getElementById('case-status').textContent = '当前：' + panel.querySelector('h4').textContent + '。以下是条件推演，未实测厂商产品。';
+  }
+  caseInputs.forEach(input => input.addEventListener('change', updateCase));
+  let printState;
+  window.addEventListener('beforeprint', () => { printState = allDetails.map(detail => detail.open); allDetails.forEach(detail => { detail.open = true; }); });
+  window.addEventListener('afterprint', () => { if (printState) allDetails.forEach((detail, i) => { detail.open = printState[i]; }); });
+  filterCompanies();
+  updateCase();
+})();
+
+  </script>
+<!-- archive:navigation-script:start -->
+<script data-archive-navigation>
+// Shared enhancement for the static, numbered topic directory.
+(() => {
+  const links = Array.from(document.querySelectorAll('.sidebar nav a[href^="#"]'));
+  const entries = links.map(link => {
+    try { return { link, section: document.getElementById(decodeURIComponent(link.hash.slice(1))) }; }
+    catch { return { link, section: null }; }
+  }).filter(entry => entry.section);
+  if (!entries.length) return;
+  function setCurrent(current) {
+    entries.forEach(entry => {
+      const selected = entry === current;
+      entry.link.classList.toggle('current', selected);
+      if (selected) entry.link.setAttribute('aria-current', 'location');
+      else entry.link.removeAttribute('aria-current');
+    });
+  }
+  function update() {
+    const header = document.querySelector('.archive-header');
+    const offset = (header ? header.getBoundingClientRect().height : 0) + 36;
+    let current = entries[0];
+    for (const entry of entries) {
+      // Native anchor positioning can round a fractional CSS pixel upward.
+      if (entry.section.getBoundingClientRect().top <= offset + 1) current = entry;
+      else break;
+    }
+    if (window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = entries.at(-1);
+    setCurrent(current);
+  }
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; update(); });
+  }
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('hashchange', schedule);
+  window.addEventListener('load', update, { once: true });
+  document.querySelectorAll('[data-archive-print]').forEach(button => {
+    button.disabled = false;
+    button.addEventListener('click', () => window.print());
+  });
+  update();
+})();
+</script>
+<!-- archive:navigation-script:end -->
+</body>
+</html>

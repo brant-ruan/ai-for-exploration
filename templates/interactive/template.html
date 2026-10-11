@@ -12,33 +12,27 @@
   </style>
   <!-- archive:style:start -->
   <style id="archive-base-style">
-    /* sync-interactive.mjs 在这里内联 templates/interactive/base.css。 */
+    /* sync-interactive.mjs 依次内联 base.css、shared/header.css、shared/footer.css。 */
   </style>
   <!-- archive:style:end -->
 </head>
 <body>
   <!-- archive:header:start -->
-  <header class="archive-header">
-    <div class="archive-header-inner">
-      <span class="archive-brand">探索档案</span>
-      <nav class="archive-nav" aria-label="档案导航">
-        <!-- 共同导航及本页元数据由同步脚本注入，不手写站点根路径。 -->
-      </nav>
-    </div>
-  </header>
+  <!-- 同步脚本从 templates/shared/header.html 注入唯一共同页首。 -->
   <!-- archive:header:end -->
   <div class="layout">
     <aside class="sidebar" aria-label="本页目录">
       <div class="brand">主题简称</div>
       <nav aria-label="章节目录">
-        <!-- 根据实际章节加入链接；不预置固定学科或固定章节数量。 -->
+        <!-- 根据实际章节加入静态编号链接，例如 <a href="#question">01 核心问题</a>。
+             编号按阅读顺序排列；不预置固定学科或固定章节数量。 -->
       </nav>
+      <button class="sidebar-print" type="button" data-archive-print disabled>打印 / 保存为 PDF</button>
     </aside>
     <main id="content">
       <header class="hero">
-        <p class="eyebrow">主题类型或阅读定位</p>
         <h1>主题标题</h1>
-        <p class="dek">填写本主题的问题、范围，以及希望帮助读者理解的内容。</p>
+        <p class="dek">直接提出本主题的问题或核心结论，不列读者身份和格式说明。</p>
         <!-- archive:meta:start -->
         <div class="archive-meta">
           <!-- 日期、版本或修订信息由同步脚本根据主题元数据填充。 -->
@@ -51,15 +45,15 @@
     </main>
   </div>
   <!-- archive:footer:start -->
-  <footer class="archive-footer">
-    <div class="archive-footer-inner">
-      <p>探索档案</p>
-      <!-- 共同页尾链接及元数据由同步脚本注入。 -->
-    </div>
-  </footer>
+  <!-- 同步脚本从 templates/shared/footer.html 注入唯一共同页尾。 -->
   <!-- archive:footer:end -->
   <script>
     /* 可选的主题脚本；正文、图示与默认说明应由静态 HTML 提供。 */
   </script>
+  <!-- archive:navigation-script:start -->
+  <script data-archive-navigation>
+    /* 同步脚本在这里内联 navigation.js；主题脚本不另写目录追踪。 */
+  </script>
+  <!-- archive:navigation-script:end -->
 </body>
 </html>

@@ -24,6 +24,25 @@
         "markdown": ["investigation-agent-sandboxing.md"],
         "html": ["investigation-agent-sandboxing.html"]
       }
+    },
+    {
+      "slug": "investigation-ai-security-startups",
+      "title": "大语言模型时代的网络安全创业",
+      "subtitle": "团队、产品控制点与融资发展图谱",
+      "kind": "investigation",
+      "created": "2026-10-11",
+      "updated": "2026-10-11",
+      "summary": "围绕保护 LLM/agent 与 AI 改造传统安全两条主线，核验 36 家公司的团队来源、产品机制、融资及并购状态，交叉比较美国、以色列、欧洲与中国，为科研、职业和创业判断提供参考。",
+      "tags": [
+        "AI Security",
+        "AI Agents",
+        "网络安全",
+        "创业"
+      ],
+      "markdown": "investigation-ai-security-startups-latest.md",
+      "html": "investigation-ai-security-startups-latest.html",
+      "assets": [],
+      "history": []
     }
   ]
 }

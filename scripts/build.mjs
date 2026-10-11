@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'markdown-it';
 import { validateDate } from './archive-lib.mjs';
+import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'dist');
@@ -57,18 +58,11 @@ for (const topic of topics) {
 }
 
 const arrow = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const external = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const book = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5h7a3 3 0 0 1 3 3V20a4 4 0 0 0-4-2H4zm16 0h-3a3 3 0 0 0-3 3V20a4 4 0 0 1 4-2h2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
 function header(isHome = false) {
-  return `<a class="skip-link" href="#main">跳到主要内容</a>
-  <header class="site-header"><div class="header-inner">
-    <a class="brand" href="${url()}"><span class="brand-mark" aria-hidden="true">[<i>·</i>]</span><span>探索档案<small>ai-for-exploration</small></span></a>
-    <nav aria-label="站点导航"><a href="${isHome ? '#topics' : url('#topics')}">主题档案</a><a class="repo-link" href="${escape(site.repository)}" aria-label="在 GitHub 查看仓库">GitHub ${external}</a></nav>
-  </div></header>`;
+  return renderHeader({ homeHref: url(), topicsHref: isHome ? '#topics' : url('#topics'), contentHref: '#main', repository: site.repository });
 }
-function footer() {
-  return `<footer class="site-footer"><div class="footer-inner"><span>ai-for-exploration <span class="footer-dot">/</span> 持续探索，保留来路</span><a href="${escape(site.repository)}">源文件与修订记录 ${external}</a></div></footer>`;
-}
+const footer = renderFooter({ repository: site.repository });
 function shell({ title, description, body, route = '', className = '' }) {
   return `<!doctype html>
 <html lang="zh-CN"><head>
@@ -107,12 +101,13 @@ const home = shell({
     <section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><p class="eyebrow"><span></span> AI FOR EXPLORATION</p><h1 id="hero-title"><span class="hero-title-line">借助 AI${aiPresence}</span><span class="hero-title-line">持续探索与积累</span></h1><p class="hero-description">记录人工智能辅助知识管理与探索的尝试<br>从一个话题的广度调研，到一个问题的深度追问</p><a class="text-link" href="#topics">浏览主题档案 ${arrow}</a></div>
     <aside class="reading-modes" aria-label="两种阅读方式"><p class="mode-caption">同一个主题，两条理解路径</p><div class="mode-row"><span class="mode-number">01</span><div><h2>深度记录 <small>MARKDOWN</small></h2><p>细读机制、比较取舍，追溯事实与来源。</p></div></div><div class="mode-row"><span class="mode-number">02</span><div><h2>交互讲解 <small>HTML</small></h2><p>通过图示、案例与交互，建立技术全貌。</p></div></div><p class="mode-footnote">独立组织，共用经过核验的证据。</p></aside></section>
     <section id="topics" class="archive" aria-labelledby="archive-title"><div class="section-top"><div><p class="eyebrow">THE ARCHIVE</p><h2 id="archive-title">主题档案</h2></div><div class="archive-tools">${filters}<label class="search-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="sr-only">搜索主题、关键词或标签</span><input id="topic-search" type="search" placeholder="搜索主题、关键词或标签" autocomplete="off"></label></div></div><div class="topic-list">${sorted.map(card).join('')}</div><p id="search-status" class="sr-only" role="status" aria-live="polite"></p><div id="empty-state" class="empty-state" hidden><p>没有匹配的主题</p><span>试试其他关键词，或清空搜索。</span><button id="clear-search" type="button" class="button button-secondary">清空筛选</button></div></section>
-  </main>${footer()}`
+  </main>${footer}`
 });
 
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(path.join(root, 'site/assets'), path.join(output, 'assets'), { recursive: true });
+await writeFile(path.join(output, 'assets/site.css'), `${(await readFile(path.join(root, 'site/assets/site.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}\n`);
 await writeFile(path.join(output, 'index.html'), home);
 await writeFile(path.join(output, '.nojekyll'), '');
 try {
@@ -185,7 +180,7 @@ for (const topic of topics) {
     body: `${header()}<div class="reading-progress" aria-hidden="true"><span></span></div><main id="main" class="reader-main">
       <section class="report-hero"><nav class="breadcrumb" aria-label="当前位置"><a href="${url('#topics')}">主题档案</a><span>/</span><span>${escape(topic.title)}</span></nav><p class="eyebrow">${kindLabel(topic.kind)} <span class="eyebrow-separator">/</span> 深度报告 <span class="eyebrow-separator">/</span> 创建 <time datetime="${topic.created}">${dateLabel(topic.created)}</time> <span class="eyebrow-separator">/</span> 更新 <time datetime="${topic.updated}">${dateLabel(topic.updated)}</time></p><h1>${escape(reportTitle)}</h1><p class="report-description">${escape(topic.summary)}</p><div class="report-actions"><a class="button button-primary" href="${url(`${topic.slug}/${topic.html}`)}">打开交互讲解 ${arrow}</a><a class="button button-secondary" href="${url(`${topic.slug}/${topic.markdown}`)}" download>${book} 下载 Markdown</a><button class="button print-button" type="button" data-print>打印 / PDF</button></div>${historyMenu(topic)}</section>
       <div class="reader-grid"><aside class="reader-toc"><details class="toc-shell" open><summary>本页目录<span class="toc-toggle" aria-hidden="true">⌄</span></summary><nav aria-label="报告章节"><ol>${toc}</ol></nav></details><div class="toc-note">这是一份带时间范围的资料快照。版本与出处见正文及来源索引。</div></aside><article id="report-content" class="prose" aria-label="${escape(topic.title)}报告正文">${content}<div class="report-end"><span>读到这里，可以换一条理解路径。</span><a class="text-link" href="${url(`${topic.slug}/${topic.html}`)}">打开交互讲解 ${arrow}</a></div></article></div>
-    </main><a class="back-top" href="#main" aria-label="回到页面顶部" hidden>↑</a>${footer()}`
+    </main><a class="back-top" href="#main" aria-label="回到页面顶部" hidden>↑</a>${footer}`
   });
   await mkdir(path.join(output, topic.slug, 'report'), { recursive: true });
   await writeFile(path.join(output, topic.slug, 'report/index.html'), report);
@@ -207,6 +202,6 @@ for (const topic of topics) {
 
 await writeFile(path.join(output, '404.html'), shell({
   title: `未找到页面 · ${site.title}`, description: '返回主题档案，继续探索。', route: '404.html',
-  body: `${header()}<main id="main" class="not-found"><p class="eyebrow">404 / PAGE NOT FOUND</p><h1>这条路径暂时没有资料。</h1><p>页面可能已移动，请从主题档案继续阅读。</p><a class="button button-primary" href="${url()}">返回主题档案 ${arrow}</a></main>${footer()}`
+  body: `${header()}<main id="main" class="not-found"><p class="eyebrow">404 / PAGE NOT FOUND</p><h1>这条路径暂时没有资料。</h1><p>页面可能已移动，请从主题档案继续阅读。</p><a class="button button-primary" href="${url()}">返回主题档案 ${arrow}</a></main>${footer}`
 }));
 console.log(`Site ready: dist/ · base path ${base || '/'} · ${topics.length} topic(s)`);

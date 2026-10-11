@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { validateDate } from './archive-lib.mjs';
+import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
@@ -15,7 +16,8 @@ if ((options.file || options.updated) && !options.slug) throw new Error('--file 
 const { site, topics } = JSON.parse(await readFile(path.join(root, 'site/catalog.json'), 'utf8'));
 const selected = options.slug ? topics.filter((topic) => topic.slug === options.slug) : topics;
 if (!selected.length) throw new Error('Unknown topic: ' + options.slug);
-const css = await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8');
+const css = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}`;
+const navigationScript = (await readFile(path.join(root, 'templates/interactive/navigation.js'), 'utf8')).trimEnd();
 const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
 const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
 const escape = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -38,8 +40,8 @@ for (const topic of selected) {
   if (updated < topic.created) throw new Error('Update must not predate creation');
   const original = await readFile(file, 'utf8');
   if (!/<main\b[^>]*\bid="content"/.test(original)) throw new Error('Interactive HTML needs <main id="content"> for shared navigation');
-  const header = `<a class="skip archive-skip" href="#content">跳到正文</a><header class="archive-header"><div class="archive-header-inner"><a class="archive-brand" href="../"><span>探索档案<small>ai-for-exploration</small></span></a><nav class="archive-nav" aria-label="档案导航"><a href="../#topics">主题档案</a><a href="./report/">深度报告（最新）</a><a href="${escape(site.repository)}">GitHub ↗</a></nav></div></header>`;
-  const footer = `<footer class="archive-footer"><div class="archive-footer-inner"><div><strong>ai-for-exploration</strong><span class="archive-meta">创建 ${escape(topic.created)} · 内容更新 ${escape(updated)}</span></div><a href="${escape(site.repository + '/tree/main/' + topic.slug)}">源文件与版本记录 ↗</a></div></footer>`;
+  const header = renderHeader({ homeHref: '../', topicsHref: '../#topics', contentHref: '#content', repository: site.repository, reportHref: './report/', interactive: true });
+  const footer = renderFooter({ repository: site.repository, interactive: true });
   let result = block(original, 'style', `<style data-archive-style>\n${css.trimEnd()}\n</style>`, (document, content) => {
     if (!/<\/head>/i.test(document)) throw new Error('Missing HTML head');
     return document.replace(/<\/head>/i, `${content}\n</head>`);
@@ -61,6 +63,10 @@ for (const topic of selected) {
     const hero = /(<header\b[^>]*class="hero"[^>]*>[\s\S]*?)(<\/header>)/i;
     if (!hero.test(document)) throw new Error('Interactive HTML needs header.hero');
     return document.replace(hero, (_, body, close) => `${body}\n${content}\n${close}`);
+  });
+  result = block(result, 'navigation-script', `<script data-archive-navigation>\n${navigationScript}\n</script>`, (document, content) => {
+    if (!/<\/body>/i.test(document)) throw new Error('Missing HTML body closing tag');
+    return document.replace(/<\/body>/i, `${content}\n</body>`);
   });
   if (result !== original) await writeFile(file, result);
   console.log(`Synchronized shared style/icon/navigation: ${path.relative(root, file)}`);
