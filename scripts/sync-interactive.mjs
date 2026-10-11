@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { validateDate } from './archive-lib.mjs';
-import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
+import { headerCss, footerCss, themeCss, themeScript, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
@@ -16,7 +16,7 @@ if ((options.file || options.updated) && !options.slug) throw new Error('--file 
 const { site, topics } = JSON.parse(await readFile(path.join(root, 'site/catalog.json'), 'utf8'));
 const selected = options.slug ? topics.filter((topic) => topic.slug === options.slug) : topics;
 if (!selected.length) throw new Error('Unknown topic: ' + options.slug);
-const css = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}`;
+const css = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}\n\n${themeCss}`;
 const navigationScript = (await readFile(path.join(root, 'templates/interactive/navigation.js'), 'utf8')).trimEnd();
 const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
 const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
@@ -42,7 +42,18 @@ for (const topic of selected) {
   if (!/<main\b[^>]*\bid="content"/.test(original)) throw new Error('Interactive HTML needs <main id="content"> for shared navigation');
   const header = renderHeader({ homeHref: '../', topicsHref: '../#topics', contentHref: '#content', repository: site.repository, reportHref: './report/', interactive: true });
   const footer = renderFooter({ repository: site.repository, interactive: true });
-  let result = block(original, 'style', `<style data-archive-style>\n${css.trimEnd()}\n</style>`, (document, content) => {
+  let result = block(original, 'theme-script', `<script data-archive-theme>\n${themeScript}\n</script>`, (document, content) => {
+    const head = /(<head\b[^>]*>)([\s\S]*?)(<\/head>)/i;
+    if (!head.test(document)) throw new Error('Missing HTML head');
+    return document.replace(head, (_, open, contents, close) => {
+      const charset = /<meta\b[^>]*\bcharset\s*=\s*["']?[^\s"'>]+["']?[^>]*>/i;
+      const next = charset.test(contents)
+        ? contents.replace(charset, tag => `${tag}\n${content}\n`)
+        : `\n${content}\n${contents}`;
+      return open + next + close;
+    });
+  });
+  result = block(result, 'style', `<style data-archive-style>\n${css.trimEnd()}\n</style>`, (document, content) => {
     if (!/<\/head>/i.test(document)) throw new Error('Missing HTML head');
     return document.replace(/<\/head>/i, `${content}\n</head>`);
   });

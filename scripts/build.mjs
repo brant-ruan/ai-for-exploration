@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'markdown-it';
 import { validateDate } from './archive-lib.mjs';
-import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
+import { headerCss, footerCss, themeCss, themeScript, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'dist');
@@ -67,6 +67,7 @@ function shell({ title, description, body, route = '', className = '' }) {
   return `<!doctype html>
 <html lang="zh-CN"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <script data-archive-theme>\n${themeScript}\n</script>
   <meta name="description" content="${escape(description)}">
   <meta name="theme-color" content="#172f44">
   <title>${escape(title)}</title>
@@ -107,7 +108,7 @@ const home = shell({
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(path.join(root, 'site/assets'), path.join(output, 'assets'), { recursive: true });
-await writeFile(path.join(output, 'assets/site.css'), `${(await readFile(path.join(root, 'site/assets/site.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}\n`);
+await writeFile(path.join(output, 'assets/site.css'), `${(await readFile(path.join(root, 'site/assets/site.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}\n\n${themeCss}\n`);
 await writeFile(path.join(output, 'index.html'), home);
 await writeFile(path.join(output, '.nojekyll'), '');
 try {

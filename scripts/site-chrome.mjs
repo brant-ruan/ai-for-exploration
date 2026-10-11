@@ -4,6 +4,8 @@ const headerTemplate = (await readFile(new URL('../templates/shared/header.html'
 export const headerCss = (await readFile(new URL('../templates/shared/header.css', import.meta.url), 'utf8')).trimEnd();
 const footerTemplate = (await readFile(new URL('../templates/shared/footer.html', import.meta.url), 'utf8')).trim();
 export const footerCss = (await readFile(new URL('../templates/shared/footer.css', import.meta.url), 'utf8')).trimEnd();
+export const themeCss = (await readFile(new URL('../templates/shared/theme.css', import.meta.url), 'utf8')).trimEnd();
+export const themeScript = (await readFile(new URL('../templates/shared/theme.js', import.meta.url), 'utf8')).trimEnd();
 const escapeAttribute = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[char]);

@@ -2,6 +2,80 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+<!-- archive:theme-script:start -->
+<script data-archive-theme>
+(() => {
+  'use strict';
+  const key = 'ai-for-exploration-theme';
+  const root = document.documentElement;
+  const normalize = value => value === 'light' || value === 'dark' ? value : null;
+  const media = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  const systemTheme = () => media?.matches ? 'dark' : 'light';
+  let storage = null;
+  let preference = null;
+  let buttons = [];
+  let currentTheme;
+  try {
+    storage = window.localStorage;
+    preference = normalize(storage.getItem(key));
+  } catch {
+    // The in-memory preference still works when storage is unavailable.
+  }
+
+  function updateButtons() {
+    const dark = currentTheme === 'dark';
+    for (const button of buttons) {
+      button.setAttribute('aria-pressed', String(dark));
+      button.title = dark ? '切换到浅色模式' : '切换到深色模式';
+      button.querySelector('[data-theme-icon="moon"]')?.toggleAttribute('hidden', dark);
+      button.querySelector('[data-theme-icon="sun"]')?.toggleAttribute('hidden', !dark);
+    }
+  }
+
+  function applyTheme(theme) {
+    currentTheme = theme;
+    root.setAttribute('data-theme', theme);
+    updateButtons();
+  }
+
+  // This runs synchronously in head, before styles can paint the page.
+  applyTheme(preference ?? systemTheme());
+
+  function enhanceButtons() {
+    buttons = Array.from(document.querySelectorAll('[data-theme-toggle]'));
+    for (const button of buttons) {
+      button.hidden = false;
+      button.addEventListener('click', () => {
+        preference = currentTheme === 'dark' ? 'light' : 'dark';
+        try {
+          storage?.setItem(key, preference);
+        } catch {
+          // Do not make storage permission a prerequisite for switching.
+        }
+        applyTheme(preference);
+      });
+    }
+    updateButtons();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhanceButtons, { once: true });
+  else enhanceButtons();
+
+  const followSystem = () => {
+    if (preference === null) applyTheme(systemTheme());
+  };
+  if (media?.addEventListener) media.addEventListener('change', followSystem);
+  else if (media?.addListener) media.addListener(followSystem);
+
+  window.addEventListener('storage', event => {
+    if (event.key !== key && event.key !== null) return;
+    if (storage && event.storageArea && event.storageArea !== storage) return;
+    preference = normalize(event.newValue);
+    applyTheme(preference ?? systemTheme());
+  });
+})();
+</script>
+<!-- archive:theme-script:end -->
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="为熟悉网络安全与agent研究的读者，按七个控制点梳理36家公司、产品机制、团队、融资与并购，并提供场景推演。">
   <title>大语言模型时代的网络安全创业图谱 · 探索档案</title>
@@ -16,8 +90,8 @@
 .lane-heading span { color:var(--archive-muted); font-size:12px; }
 .control-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
 .lane-b .control-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
-.control-card { display:block; padding:16px; border:1px solid var(--archive-line); border-radius:6px; text-decoration:none; color:var(--archive-text); background:white; }
-.control-card:hover { border-color:var(--archive-accent); background:#f0f6f5; }
+.control-card { display:block; padding:16px; border:1px solid var(--archive-line); border-radius:6px; text-decoration:none; color:var(--archive-text); background:var(--theme-surface,#fff); }
+.control-card:hover { border-color:var(--archive-accent); background:var(--theme-soft-hover,#f0f6f5); }
 .control-code { font:650 13px var(--archive-mono); color:var(--archive-accent); }
 #topic-body .control-card h3 { font-size:16px; line-height:1.65; margin:12px 0; }
 #topic-body .control-card p { font-size:12px; line-height:1.8; margin-bottom:10px; }
@@ -28,17 +102,17 @@
 .filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
 .field { display:grid; gap:6px; min-width:0; }
 .field label { font-size:12px; font-weight:650; color:var(--archive-ink); }
-.field input, .field select, .compare-controls select { width:100%; min-width:0; min-height:42px; padding:7px 10px; border:1px solid #b7c6ce; border-radius:4px; background:white; color:var(--archive-text); }
+.field input, .field select, .compare-controls select { width:100%; min-width:0; min-height:42px; padding:7px 10px; border:1px solid var(--theme-control-border,#b7c6ce); border-radius:4px; background:var(--theme-surface,#fff); color:var(--archive-text); }
 .filter-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:16px; }
-.topic-button { padding:7px 13px; border:1px solid #a7bec3; background:#edf4f3; border-radius:4px; color:var(--archive-ink); cursor:pointer; font-size:12px; }
-.topic-button:hover { background:#deeeeb; }
+.topic-button { padding:7px 13px; border:1px solid var(--theme-control-border,#a7bec3); background:var(--theme-control-bg,#edf4f3); border-radius:4px; color:var(--archive-ink); cursor:pointer; font-size:12px; }
+.topic-button:hover { background:var(--theme-control-hover,#deeeeb); }
 .topic-button:disabled, .enhance-control:disabled { cursor:default; opacity:.7; }
 #filter-result { margin:0 0 0 auto; color:var(--archive-muted); font-size:12px; }
 .company-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start; }
 .company-entry { min-width:0; padding:20px; border:1px solid var(--archive-line); border-radius:var(--archive-radius); background:var(--archive-surface); scroll-margin-top:100px; }
 .company-heading { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
 #topic-body .company-heading h3 { font-size:20px; margin:0; line-height:1.55; overflow-wrap:anywhere; }
-.status-pill { flex-shrink:0; margin-top:3px; padding:2px 7px; background:#eaf2f0; color:var(--archive-accent); border-radius:3px; font-size:10px; }
+.status-pill { flex-shrink:0; margin-top:3px; padding:2px 7px; background:var(--theme-success-soft,#eaf2f0); color:var(--archive-accent); border-radius:3px; font-size:10px; }
 #topic-body .company-context { margin:8px 0 12px; font-size:11px; line-height:1.75; color:var(--archive-muted); }
 .company-tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
 .company-tags a { font-size:10px; text-decoration:none; }
@@ -61,7 +135,7 @@
 .case-controls legend { padding:0 6px; font-size:13px; font-weight:650; color:var(--archive-ink); }
 .case-controls label { display:inline-flex; gap:8px; align-items:center; margin-right:22px; font-size:13px; }
 .case-controls input { width:17px; height:17px; accent-color:var(--archive-accent); }
-.case-panel { padding:20px; margin:14px 0; background:white; border:1px solid var(--archive-line); border-left:4px solid var(--archive-accent); border-radius:6px; }
+.case-panel { padding:20px; margin:14px 0; background:var(--theme-surface,#fff); border:1px solid var(--archive-line); border-left:4px solid var(--archive-accent); border-radius:6px; }
 #topic-body .case-panel h4 { margin:0 0 12px; }
 #topic-body .case-panel p { font-size:13px; }
 #topic-body .case-panel .case-limit { margin:0; color:var(--archive-muted); font-size:12px; }
@@ -138,9 +212,9 @@ body { margin: 0; background: var(--archive-paper); color: var(--archive-text); 
 a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 a:hover { color: var(--archive-accent); }
 button, input, select, textarea { font: inherit; }
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #347e79; outline-offset: 4px; }
-.skip { position: fixed; top: -80px; left: 20px; z-index: 100; padding: 10px 16px; background: var(--archive-ink); color: white; border-radius: 4px; }
-.skip:focus { top: 12px; color: white; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
+.skip { position: fixed; top: -80px; left: 20px; z-index: 100; padding: 10px 16px; background: var(--archive-ink); color: var(--theme-inverse, #fff); border-radius: 4px; }
+.skip:focus { top: 12px; color: var(--theme-inverse, #fff); }
 
 /* Site header and footer are supplied by templates/shared/. */
 .archive-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin: 0; color: var(--archive-muted); font: 11px/1.8 var(--archive-font); }
@@ -157,7 +231,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .sidebar .sidebar-print { display: block; margin-top: 28px; padding: 8px 12px; border: 1px solid var(--archive-line); border-radius: 4px; background: var(--archive-surface); color: var(--archive-muted); font: 11px/1.7 var(--archive-font); cursor: pointer; }
 .sidebar .sidebar-print:disabled { opacity: .6; cursor: default; }
 .sidebar .sidebar-print:hover { color: var(--archive-accent); border-color: var(--archive-accent); }
-.sidebar nav a:hover, .sidebar nav a.current, .sidebar nav a[aria-current="location"] { color: var(--archive-accent); background: #eaf2f0; }
+.sidebar nav a:hover, .sidebar nav a.current, .sidebar nav a[aria-current="location"] { color: var(--archive-accent); background: var(--theme-success-soft, #eaf2f0); }
 .layout > main { width: 100%; min-width: 0; max-width: none; margin: 0; padding: 42px 44px 64px; }
 .hero { margin: 0; padding: 12px 0 38px; border-bottom: 1px solid var(--archive-line); }
 .hero h1 { max-width: 960px; margin: 8px 0 22px; color: var(--archive-ink); font-size: clamp(32px,3.8vw,48px); font-weight: 650; line-height: 1.4; letter-spacing: -.025em; overflow-wrap: anywhere; }
@@ -194,12 +268,12 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
 .table-wrap { max-width: 100%; margin: 24px 0; overflow: auto; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); scrollbar-width: thin; }
 .table-wrap table { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--archive-surface); font-size: 13px; line-height: 1.85; }
 .table-wrap th, .table-wrap td { padding: 12px 14px; border-bottom: 1px solid var(--archive-line); text-align: left; vertical-align: top; }
-.table-wrap th { background: #edf3f5; color: var(--archive-ink); font-weight: 650; }
+.table-wrap th { background: var(--theme-table-head-bg, #edf3f5); color: var(--archive-ink); font-weight: 650; }
 .table-wrap tr:last-child td { border-bottom: 0; }
 .table-wrap a { overflow-wrap: anywhere; }
 .stack { display: grid; gap: 10px; }
 .layer { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 16px; padding: 16px 18px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
-.layer:nth-child(2n) { background: #f0f4f6; }
+.layer:nth-child(2n) { background: var(--theme-soft, #f0f4f6); }
 .layer > * { min-width: 0; }
 .layer b { color: var(--archive-ink); font-size: 16px; }
 .layer span { color: var(--archive-muted); font-size: 13px; }
@@ -209,11 +283,11 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
 .note p:last-child { margin-bottom: 0; }
 .rule { margin: 30px 0; border-top: 1px solid var(--archive-line); }
 .source { font-size: 11px; line-height: 1.8; }
-.code { margin: 22px 0; padding: 20px 22px; overflow: auto; border-radius: var(--archive-radius); background: var(--archive-ink); color: #e9f2f6; font: 12px/1.85 var(--archive-mono); white-space: pre-wrap; word-break: break-word; }
+.code { margin: 22px 0; padding: 20px 22px; overflow: auto; border-radius: var(--archive-radius); background: var(--theme-code-bg, var(--archive-ink)); color: var(--theme-code-text, #e9f2f6); font: 12px/1.85 var(--archive-mono); white-space: pre-wrap; word-break: break-word; }
 .layout main details { margin: 16px 0; padding: 16px 20px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
 .layout main summary { cursor: pointer; font-weight: 650; }
 .layout main details > :last-child { margin-bottom: 0; }
-.layout main blockquote { margin: 24px 0; padding: 15px 20px; border-left: 3px solid #709b96; background: #f0f5f4; }
+.layout main blockquote { margin: 24px 0; padding: 15px 20px; border-left: 3px solid var(--theme-quote-line, #709b96); background: var(--theme-quote-bg, #f0f5f4); }
 .footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--archive-line); color: var(--archive-muted); font-size: 12px; }
 
 @media (max-width: 1150px) {
@@ -280,17 +354,21 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
 }
 .skip-link { position: fixed; z-index: 100; top: -80px; left: 20px; margin: 0; padding: 9px 18px; border-radius: 0; color: #fff; background: #172f44; font: 14px/1.6 var(--site-header-font); text-decoration: none; }
 .skip-link:focus { top: 12px; color: #fff; }
-.site-header { position: sticky; top: 0; z-index: 40; margin: 0; padding: 0; border-bottom: 1px solid #dfe5ea; background: rgba(247,248,250,.97); color: #172f44; }
+.site-header { position: sticky; top: 0; z-index: 40; margin: 0; padding: 0; border-bottom: 1px solid var(--theme-line, #dfe5ea); background: var(--theme-header-bg, rgba(247,248,250,.97)); color: var(--theme-ink, #172f44); }
 .site-header .header-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; width: 100%; max-width: 1240px; height: var(--site-header-height); margin: 0 auto; padding: 0 48px; }
-.site-header .brand { display: inline-flex; align-items: center; gap: 15px; flex-shrink: 0; margin: 0; color: #172f44; font: 650 17px/1.4 var(--site-header-font); letter-spacing: normal; text-decoration: none; white-space: nowrap; }
-.site-header .brand small { display: block; margin-top: 3px; color: #6b7884; font-size: 11px; font-weight: 450; line-height: 1.4; letter-spacing: .025em; }
+.site-header .brand { display: inline-flex; align-items: center; gap: 15px; flex-shrink: 0; margin: 0; color: var(--theme-ink, #172f44); font: 650 17px/1.4 var(--site-header-font); letter-spacing: normal; text-decoration: none; white-space: nowrap; }
+.site-header .brand small { display: block; margin-top: 3px; color: var(--theme-muted, #6b7884); font-size: 11px; font-weight: 450; line-height: 1.4; letter-spacing: .025em; }
 .site-header .brand-mark { padding-right: 7px; font: 400 32px/1 var(--site-header-mono); letter-spacing: -7px; }
-.site-header .brand-mark i { font-style: normal; color: #286a66; }
+.site-header .brand-mark i { font-style: normal; color: var(--theme-accent, #286a66); }
 .site-header .site-nav { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px 28px; min-width: 0; margin: 0; font: 13px/1.8 var(--site-header-font); }
-.site-header .site-nav a { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; color: #354554; text-decoration: none; white-space: nowrap; }
-.site-header .brand:hover, .site-header .site-nav a:hover, .site-header .site-nav a[aria-current="page"] { color: #286a66; }
+.site-header .site-nav a { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; color: var(--theme-text, #354554); text-decoration: none; white-space: nowrap; }
+.site-header .brand:hover, .site-header .site-nav a:hover, .site-header .site-nav a[aria-current="page"] { color: var(--theme-accent, #286a66); }
 .site-header svg { display: block; width: 16px; height: 16px; flex-shrink: 0; }
-.skip-link:focus-visible, .site-header a:focus-visible { outline: 3px solid #347e79; outline-offset: 4px; }
+.skip-link:focus-visible, .site-header a:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
+.site-header .theme-toggle { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; margin: 0; padding: 6px; border: 1px solid var(--theme-line, #dfe5ea); border-radius: 4px; background: var(--theme-surface, #fff); color: var(--theme-ink, #172f44); cursor: pointer; }
+.site-header .theme-toggle:hover { color: var(--theme-accent, #286a66); border-color: var(--theme-accent, #286a66); }
+.site-header .theme-toggle[aria-pressed="true"] { background: var(--theme-control-bg, #edf4f3); color: var(--theme-accent, #286a66); }
+.site-header .theme-toggle:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
 @media (max-width: 780px) {
   :root { --site-header-height: 73px; }
   .site-header .header-inner { padding-left: 25px; padding-right: 25px; }
@@ -301,24 +379,24 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
   .site-header .brand { gap: 10px; font-size: 15px; }
   .site-header .brand small { font-size: 9px; }
   .site-header .brand-mark { font-size: 27px; letter-spacing: -6px; }
-  .site-header .site-nav { column-gap: 16px; font-size: 11px; }
+  .site-header .site-nav { column-gap: 12px; font-size: 11px; }
   .site-header .repo-link svg { display: none; }
 }
 @media (max-width: 360px) {
-  .site-header .site-nav { column-gap: 12px; font-size: 10px; }
+  .site-header .site-nav { column-gap: 6px; font-size: 10px; }
 }
 @media print {
   .site-header, .skip-link { display: none !important; }
 }
 
 /* One footer presentation for generated pages and standalone interactive HTML. */
-.site-footer { margin: 0; padding: 0; border-top: 1px solid #dce3e8; background: #fff; }
-.site-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; max-width: 1240px; margin: 0 auto; padding: 26px 48px 28px; color: #64748b; font: 11px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.site-footer { margin: 0; padding: 0; border-top: 1px solid var(--theme-line, #dce3e8); background: var(--theme-surface, #fff); }
+.site-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; max-width: 1240px; margin: 0 auto; padding: 26px 48px 28px; color: var(--theme-muted, #64748b); font: 11px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
 .site-footer .footer-copy { font-weight: 400; }
-.site-footer .footer-dot { color: #b5c1ca; padding: 0 9px; }
-.site-footer a { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; }
-.site-footer a:hover { color: #287b76; }
-.site-footer a:focus-visible { outline: 3px solid #287b76; outline-offset: 4px; }
+.site-footer .footer-dot { color: var(--theme-muted, #b5c1ca); padding: 0 9px; }
+.site-footer a { display: inline-flex; align-items: center; gap: 6px; color: var(--theme-muted, #64748b); text-decoration: none; }
+.site-footer a:hover { color: var(--theme-accent, #287b76); }
+.site-footer a:focus-visible { outline: 3px solid var(--theme-focus, #287b76); outline-offset: 4px; }
 .site-footer svg { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; }
 @media (max-width: 780px) { .site-footer .footer-inner { padding-left: 25px; padding-right: 25px; } }
 @media (max-width: 600px) {
@@ -331,6 +409,144 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
   .site-footer .footer-inner { max-width: none; padding: 16px 0 0; font-size: 8pt; }
   .site-footer a { color: #172f44; }
 }
+
+/* Palette applies only on screen; print retains the original light colors. */
+:root { color-scheme: light; }
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #e0eaf1;
+    --text: #c9d5e0;
+    --muted: #a2b3c2;
+    --accent: #85c7bc;
+    --accent-soft: #213d3a;
+    --paper: #101923;
+    --white: #172430;
+    --line: #344653;
+    --archive-ink: var(--ink);
+    --archive-text: var(--text);
+    --archive-muted: var(--muted);
+    --archive-accent: var(--accent);
+    --archive-paper: var(--paper);
+    --archive-surface: var(--white);
+    --archive-line: var(--line);
+    --blue: #8fc1e6;
+    --pale: #1d2f3d;
+    --green: #88ccb4;
+    --mint: #1d3432;
+    --amber: #dfbd82;
+    --sand: #3b3021;
+    --red: #e6a29a;
+    --theme-ink: var(--ink);
+    --theme-text: var(--text);
+    --theme-muted: var(--muted);
+    --theme-accent: var(--accent);
+    --theme-line: var(--line);
+    --theme-surface: var(--white);
+    --theme-link: var(--blue);
+    --theme-soft: var(--pale);
+    --theme-soft-hover: #213d3a;
+    --theme-control-border: #4b6070;
+    --theme-control-bg: #213a39;
+    --theme-control-hover: #2a4a45;
+    --theme-success-soft: var(--mint);
+    --theme-danger-soft: #3c272c;
+    --theme-success-line: #527e6d;
+    --theme-danger-line: #946a66;
+    --theme-code-bg: #0b131d;
+    --theme-code-text: #d9e8f4;
+    --theme-code-comment: #9dc9b6;
+    --theme-diagram-neutral: #172430;
+    --theme-diagram-blue: #1e3447;
+    --theme-diagram-green: #1d3833;
+    --theme-diagram-stroke: #657d90;
+    --theme-diagram-blue-stroke: #78b2dc;
+    --theme-diagram-green-stroke: #80bfa8;
+    --theme-diagram-edge: #89a5b9;
+    --theme-header-bg: rgba(16,25,35,.97);
+    --theme-inverse: #101923;
+    --theme-primary-hover: #c2d8e7;
+    --theme-feature-bg: #172430;
+    --theme-focus: #99d9d0;
+    --theme-code-inline-text: #a7cbe5;
+    --theme-code-inline-bg: #213345;
+    --theme-code-block-bg: #13212e;
+    --theme-link-hover: #b6e3db;
+    --theme-text-decoration: #5f8b85;
+    --theme-quote-bg: #1c3033;
+    --theme-quote-line: #709f94;
+    --theme-table-head-bg: #21313e;
+    --theme-table-row-bg: #1a2937;
+  }
+}
+/* CSS fallback also works when scripts are disabled. */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --ink: #e0eaf1;
+    --text: #c9d5e0;
+    --muted: #a2b3c2;
+    --accent: #85c7bc;
+    --accent-soft: #213d3a;
+    --paper: #101923;
+    --white: #172430;
+    --line: #344653;
+    --archive-ink: var(--ink);
+    --archive-text: var(--text);
+    --archive-muted: var(--muted);
+    --archive-accent: var(--accent);
+    --archive-paper: var(--paper);
+    --archive-surface: var(--white);
+    --archive-line: var(--line);
+    --blue: #8fc1e6;
+    --pale: #1d2f3d;
+    --green: #88ccb4;
+    --mint: #1d3432;
+    --amber: #dfbd82;
+    --sand: #3b3021;
+    --red: #e6a29a;
+    --theme-ink: var(--ink);
+    --theme-text: var(--text);
+    --theme-muted: var(--muted);
+    --theme-accent: var(--accent);
+    --theme-line: var(--line);
+    --theme-surface: var(--white);
+    --theme-link: var(--blue);
+    --theme-soft: var(--pale);
+    --theme-soft-hover: #213d3a;
+    --theme-control-border: #4b6070;
+    --theme-control-bg: #213a39;
+    --theme-control-hover: #2a4a45;
+    --theme-success-soft: var(--mint);
+    --theme-danger-soft: #3c272c;
+    --theme-success-line: #527e6d;
+    --theme-danger-line: #946a66;
+    --theme-code-bg: #0b131d;
+    --theme-code-text: #d9e8f4;
+    --theme-code-comment: #9dc9b6;
+    --theme-diagram-neutral: #172430;
+    --theme-diagram-blue: #1e3447;
+    --theme-diagram-green: #1d3833;
+    --theme-diagram-stroke: #657d90;
+    --theme-diagram-blue-stroke: #78b2dc;
+    --theme-diagram-green-stroke: #80bfa8;
+    --theme-diagram-edge: #89a5b9;
+    --theme-header-bg: rgba(16,25,35,.97);
+    --theme-inverse: #101923;
+    --theme-primary-hover: #c2d8e7;
+    --theme-feature-bg: #172430;
+    --theme-focus: #99d9d0;
+    --theme-code-inline-text: #a7cbe5;
+    --theme-code-inline-bg: #213345;
+    --theme-code-block-bg: #13212e;
+    --theme-link-hover: #b6e3db;
+    --theme-text-decoration: #5f8b85;
+    --theme-quote-bg: #1c3033;
+    --theme-quote-line: #709f94;
+    --theme-table-head-bg: #21313e;
+    --theme-table-row-bg: #1a2937;
+  }
+}
 </style>
 <!-- archive:style:end -->
 </head>
@@ -340,7 +556,7 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
 <header class="site-header archive-header">
   <div class="header-inner archive-header-inner">
     <a class="brand archive-brand" href="../"><span class="brand-mark" aria-hidden="true">[<i>·</i>]</span><span>探索档案<small>ai-for-exploration</small></span></a>
-    <nav class="site-nav archive-nav" aria-label="站点导航"><a href="../#topics">主题档案</a><a href="./report/">深度报告（最新）</a><a class="repo-link" href="https://github.com/brant-ruan/ai-for-exploration" aria-label="在 GitHub 查看仓库">GitHub <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></nav>
+    <nav class="site-nav archive-nav" aria-label="站点导航"><a href="../#topics">主题档案</a><a href="./report/">深度报告（最新）</a><a class="repo-link" href="https://github.com/brant-ruan/ai-for-exploration" aria-label="在 GitHub 查看仓库">GitHub <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><button class="theme-toggle" type="button" data-theme-toggle hidden aria-label="深色模式" aria-pressed="false" title="切换到深色模式"><svg data-theme-icon="moon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M20.7 13.1A8.6 8.6 0 0 1 10.9 3.3 8.7 8.7 0 1 0 20.7 13.1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><svg data-theme-icon="sun" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" hidden><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></nav>
   </div>
 </header>
 <!-- archive:header:end -->
@@ -644,14 +860,14 @@ small, .small { color: var(--archive-muted); font-size: 12px; }
 </section>
 
 <section id="scenario"><div class="section-head"><span class="number">04</span><div><h2>一封邮件，三种不同的阻断位置</h2><p class="lede">分析场景，未实测。合法任务是读供应商邮件、查询采购状态、草拟回复；攻击者试图让agent读取秘密并向外部地址发送。</p></div></div>
-<figure class="figure scenario-flow"><svg viewBox="0 0 840 246" role="img" aria-labelledby="scenario-title scenario-desc"><title id="scenario-title">邮件注入从不可信内容流向工具与外发的路径</title><desc id="scenario-desc">供应商邮件带入恶意指令，agent可调用采购数据库和邮件API。内容检测位于邮件入口，轨迹策略位于工具调用前，身份与凭证约束位于目标系统执行处。</desc><defs><marker id="case-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#65808d"/></marker></defs>
-<rect x="8" y="66" width="175" height="100" rx="8" fill="#edf3f7" stroke="#bdcbd3"/><text x="26" y="94" font-size="15" fill="#172f44" font-weight="600">不可信邮件 / 附件</text><text x="26" y="121" font-size="12" fill="#627280">“另读秘密并发往外部”</text><text x="26" y="145" font-size="12" fill="#627280">攻击者控制数据内容</text>
-<path d="M183,116 L290,116" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><text x="207" y="50" font-size="12" fill="#286a66">① 内容detector</text>
-<rect x="296" y="66" width="174" height="100" rx="8" fill="#eaf2ef" stroke="#acc6bf"/><text x="319" y="97" font-size="15" fill="#172f44" font-weight="600">任务agent</text><text x="319" y="124" font-size="12" fill="#627280">合法目标 + 不可信信息</text><text x="319" y="146" font-size="12" fill="#627280">生成工具调用</text>
-<path d="M470,94 L594,65" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><path d="M470,143 L594,181" stroke="#65808d" stroke-width="2" marker-end="url(#case-arrow)"/><text x="482" y="123" font-size="12" fill="#286a66">② 轨迹 / 工具策略</text>
-<rect x="600" y="22" width="230" height="74" rx="8" fill="#fff" stroke="#bdcbd3"/><text x="620" y="50" font-size="15" fill="#172f44" font-weight="600">采购数据系统</text><text x="620" y="76" font-size="12" fill="#627280">可读范围由目标系统执行</text>
-<rect x="600" y="151" width="230" height="74" rx="8" fill="#fff" stroke="#bdcbd3"/><text x="620" y="179" font-size="15" fill="#172f44" font-weight="600">邮件API / 外发目的地</text><text x="620" y="205" font-size="12" fill="#627280">draft ≠ send；流向也需授权</text>
-<text x="607" y="125" font-size="12" fill="#286a66">③ 身份 / 凭证约束</text></svg><figcaption>示意控制位置；若要证明信息流和行动安全，还需可见工具轨迹、敏感数据语义及完整中介。图不表达任何厂商的实际性能。</figcaption></figure>
+<figure class="figure scenario-flow"><svg viewBox="0 0 840 246" role="img" aria-labelledby="scenario-title scenario-desc"><title id="scenario-title">邮件注入从不可信内容流向工具与外发的路径</title><desc id="scenario-desc">供应商邮件带入恶意指令，agent可调用采购数据库和邮件API。内容检测位于邮件入口，轨迹策略位于工具调用前，身份与凭证约束位于目标系统执行处。</desc><defs><marker id="case-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="var(--theme-diagram-edge,#65808d)"/></marker></defs>
+<rect x="8" y="66" width="175" height="100" rx="8" fill="var(--theme-soft,#edf3f7)" stroke="var(--theme-diagram-stroke,#bdcbd3)"/><text x="26" y="94" font-size="15" fill="var(--archive-ink,#172f44)" font-weight="600">不可信邮件 / 附件</text><text x="26" y="121" font-size="12" fill="var(--archive-muted,#627280)">“另读秘密并发往外部”</text><text x="26" y="145" font-size="12" fill="var(--archive-muted,#627280)">攻击者控制数据内容</text>
+<path d="M183,116 L290,116" stroke="var(--theme-diagram-edge,#65808d)" stroke-width="2" marker-end="url(#case-arrow)"/><text x="207" y="50" font-size="12" fill="var(--archive-accent,#286a66)">① 内容detector</text>
+<rect x="296" y="66" width="174" height="100" rx="8" fill="var(--theme-success-soft,#eaf2ef)" stroke="var(--theme-success-line,#acc6bf)"/><text x="319" y="97" font-size="15" fill="var(--archive-ink,#172f44)" font-weight="600">任务agent</text><text x="319" y="124" font-size="12" fill="var(--archive-muted,#627280)">合法目标 + 不可信信息</text><text x="319" y="146" font-size="12" fill="var(--archive-muted,#627280)">生成工具调用</text>
+<path d="M470,94 L594,65" stroke="var(--theme-diagram-edge,#65808d)" stroke-width="2" marker-end="url(#case-arrow)"/><path d="M470,143 L594,181" stroke="var(--theme-diagram-edge,#65808d)" stroke-width="2" marker-end="url(#case-arrow)"/><text x="482" y="123" font-size="12" fill="var(--archive-accent,#286a66)">② 轨迹 / 工具策略</text>
+<rect x="600" y="22" width="230" height="74" rx="8" fill="var(--theme-surface,#fff)" stroke="var(--theme-diagram-stroke,#bdcbd3)"/><text x="620" y="50" font-size="15" fill="var(--archive-ink,#172f44)" font-weight="600">采购数据系统</text><text x="620" y="76" font-size="12" fill="var(--archive-muted,#627280)">可读范围由目标系统执行</text>
+<rect x="600" y="151" width="230" height="74" rx="8" fill="var(--theme-surface,#fff)" stroke="var(--theme-diagram-stroke,#bdcbd3)"/><text x="620" y="179" font-size="15" fill="var(--archive-ink,#172f44)" font-weight="600">邮件API / 外发目的地</text><text x="620" y="205" font-size="12" fill="var(--archive-muted,#627280)">draft ≠ send；流向也需授权</text>
+<text x="607" y="125" font-size="12" fill="var(--archive-accent,#286a66)">③ 身份 / 凭证约束</text></svg><figcaption>示意控制位置；若要证明信息流和行动安全，还需可见工具轨迹、敏感数据语义及完整中介。图不表达任何厂商的实际性能。</figcaption></figure>
 <fieldset class="case-controls"><legend>选择要叠加的控制条件</legend><label><input class="enhance-control" type="checkbox" id="case-detector" checked disabled>内容detector</label><label><input class="enhance-control" type="checkbox" id="case-trace" disabled>轨迹 / 工具策略</label><label><input class="enhance-control" type="checkbox" id="case-identity" disabled>身份 / 凭证约束</label></fieldset>
 <p class="small js-hint" id="case-status" role="status" aria-live="polite">默认：仅内容detector。以下是条件推演，没有概率或产品实测结果。</p><div id="case-panels"><article class="case-panel" data-case-mask="0"><h4>不增加这三类控制</h4><p>如果agent服从邮件中的恶意指令，且继承的数据库与邮件凭证允许读取和发送，就存在外泄路径。模型是否服从注入仍是变量；本例没有测量成功率。</p><p class="case-limit"><strong>验收重点：</strong>默认允许的工具能力大于“草拟回复”所需能力。</p></article><article class="case-panel" data-case-mask="1"><h4>仅内容detector</h4><p>在邮件进入上下文前检查。命中规则或分类器时可阻断；漏检时，原有读表与外发路径仍在。对正常长邮件误报也可能打断合法任务。</p><p class="case-limit"><strong>验收重点：</strong>检测“像不像攻击”没有改变动作授权。</p></article><article class="case-panel" data-case-mask="2"><h4>仅轨迹/工具策略</h4><p>假设所有相关tool calls均受中介：识别“读敏感表→向未批准目的地发送”的组合，在发送前拒绝。邮件是否被detector识别不影响这条规则。</p><p class="case-limit"><strong>验收重点：</strong>遗漏hook、标签或历史状态，或策略无法表达业务例外，都会改变结果。</p></article><article class="case-panel" data-case-mask="3"><h4>detector＋轨迹策略</h4><p>先减少恶意内容进入上下文，再于工具执行前检查敏感读取与外发关系。detector漏检时仍有执行约束；规则漏覆盖时detector仍只提供概率性帮助。</p><p class="case-limit"><strong>验收重点：</strong>覆盖和策略质量决定组合效果；不能把两个宣传指标直接相乘。</p></article><article class="case-panel" data-case-mask="4"><h4>仅身份/凭证约束</h4><p>按合法任务只授予采购状态查询和草稿创建权限，不授予send动作，示例的实际外发被阻断。如果业务确需发送邮件，身份有效仍不说明目的地和内容被允许。</p><p class="case-limit"><strong>验收重点：</strong>最小权限与短时凭证缩小可执行范围；需验证权限是否确实由目标系统执行。</p></article><article class="case-panel" data-case-mask="5"><h4>detector＋身份约束</h4><p>内容检查降低被注入的机会；即使漏检，草稿任务的身份没有send权限。若后续业务扩大授权，必须重新检查新增的数据与输出路径。</p><p class="case-limit"><strong>验收重点：</strong>这是限定任务和权限下的分析，不能泛化为所有邮件agent安全。</p></article><article class="case-panel" data-case-mask="6"><h4>轨迹策略＋身份约束</h4><p>凭证先限制资源与动作，策略再检查被允许动作的上下文、历史和目的地。对确需发送的其他任务，可把允许身份与允许流向分别验收。</p><p class="case-limit"><strong>验收重点：</strong>策略引擎必须看到实际动作，凭证不能被旁路工具替换。</p></article><article class="case-panel" data-case-mask="7"><h4>三类控制组合</h4><p>内容检查、执行前轨迹策略、最小权限各负责一层；在本例假设下形成互补。仍需测试间接渠道、派生敏感数据、合法例外、误报与任务完成率。</p><p class="case-limit"><strong>验收重点：</strong>组合不是无条件保证；本页没有运行或测试任何厂商产品。</p></article></div>
 <p class="source">进一步阅读：<a href="https://arxiv.org/abs/2406.13352">AgentDojo：同时评估合法任务与攻击目标</a>；<a href="https://arxiv.org/abs/2503.18813">CaMeL：受控执行与信息流</a>；<a href="https://github.com/google-research/camel-prompt-injection">作者代码</a>。论文保证依赖其策略、解释器与中介假设，本页未复现。</p>

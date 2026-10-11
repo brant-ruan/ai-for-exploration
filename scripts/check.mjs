@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { replaceReadmeIndex } from './archive-lib.mjs';
-import { headerCss, footerCss, renderHeader, renderFooter } from './site-chrome.mjs';
+import { headerCss, footerCss, themeCss, themeScript, renderHeader, renderFooter } from './site-chrome.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'dist');
@@ -14,7 +14,7 @@ const failures = [];
 const checksum = (data) => createHash('sha256').update(data).digest('hex');
 const readme = await readFile(path.join(root, 'README.md'), 'utf8');
 if (readme !== replaceReadmeIndex(readme, site, topics)) failures.push('README index differs from catalog; run npm run sync:index');
-const sharedCss = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}`;
+const sharedCss = `${(await readFile(path.join(root, 'templates/interactive/base.css'), 'utf8')).trimEnd()}\n\n${headerCss}\n\n${footerCss}\n\n${themeCss}`;
 const sharedNavigation = (await readFile(path.join(root, 'templates/interactive/navigation.js'), 'utf8')).trimEnd();
 const favicon = (await readFile(path.join(root, 'site/assets/favicon.svg'), 'utf8')).trim();
 const faviconUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(favicon);
@@ -180,7 +180,16 @@ for (const name of ['index.html', '404.html']) {
   if (!page?.includes(header) || inspected.get(path.join(output, name))?.classes.filter(name => name === 'site-header').length !== 1) failures.push(`${name}: header differs from shared template`);
   if (!page?.includes(renderFooter({ repository: site.repository })) || [...(page ?? '').matchAll(/<footer\b/g)].length !== 1) failures.push(`${name}: footer differs from shared template`);
 }
-if (!(await readFile(path.join(output, 'assets/site.css'), 'utf8')).trimEnd().endsWith(`${headerCss}\n\n${footerCss}`)) failures.push('Site header/footer CSS differs from shared template; run npm run build');
+if (!(await readFile(path.join(output, 'assets/site.css'), 'utf8')).trimEnd().endsWith(`${headerCss}\n\n${footerCss}\n\n${themeCss}`)) failures.push('Site header/footer/theme CSS differs from shared template; run npm run build');
+const latestPages = ['index.html', '404.html', ...topics.flatMap(topic => [`${topic.slug}/report/index.html`, `${topic.slug}/${topic.html}`])];
+for (const name of latestPages) {
+  const page = documents.get(path.join(output, name)) ?? '';
+  const head = page.match(/<head\b[^>]*>([\s\S]*?)<\/head\s*>/i)?.[1] ?? '';
+  const scripts = [...head.matchAll(/<script data-archive-theme>\n([\s\S]*?)\n<\/script>/g)];
+  const firstStyle = head.search(/<style\b|<link\b[^>]*rel="stylesheet"/);
+  if (scripts.length !== 1 || scripts[0][1] !== themeScript || (firstStyle !== -1 && scripts[0].index > firstStyle)) failures.push(`${name}: shared theme script must run once in head before styles`);
+  if (inspected.get(path.join(output, name))?.classes.filter(name => name === 'theme-toggle').length !== 1) failures.push(`${name}: shared header needs one theme toggle`);
+}
 for (const topic of topics) {
   const markdown = await readFile(path.join(root, topic.slug, topic.markdown), 'utf8');
   const firstBlock = markdown.replace(/^\s*# [^\n]+\n/, '').trimStart().split(/\n\s*\n/)[0];
@@ -217,7 +226,7 @@ for (const topic of topics) {
   const metadataBlock = latestHtml?.match(/<!-- archive:meta:start -->([\s\S]*?)<!-- archive:meta:end -->/);
   const metadataDates = [...(metadataBlock?.[1] ?? '').matchAll(/<time datetime="([^"]+)">([^<]+)<\/time>/g)];
   if (metadataDates.length !== 2 || metadataDates[0][1] !== topic.created || metadataDates[0][2] !== topic.created || metadataDates[1][1] !== topic.updated || metadataDates[1][2] !== topic.updated) failures.push(`${topic.slug}: interactive metadata dates differ from catalog`);
-  for (const block of ['icon', 'header', 'footer', 'meta', 'navigation-script']) {
+  for (const block of ['icon', 'header', 'footer', 'meta', 'navigation-script', 'theme-script']) {
     if (latestHtml?.split(`<!-- archive:${block}:start -->`).length !== 2 || latestHtml?.split(`<!-- archive:${block}:end -->`).length !== 2) failures.push(`${topic.slug}: missing/duplicate shared ${block} markers`);
   }
   for (const version of topic.history ?? []) {
