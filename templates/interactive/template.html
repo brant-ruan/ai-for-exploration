@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="填写本主题的问题、范围与读者背景。">
+  <title>主题标题 · 探索档案</title>
+  <style id="topic-style">
+    /* 仅放本主题的图示、控件、状态与其他专用样式。 */
+  </style>
+  <!-- archive:style:start -->
+  <style id="archive-base-style">
+    /* sync-interactive.mjs 在这里内联 templates/interactive/base.css。 */
+  </style>
+  <!-- archive:style:end -->
+</head>
+<body>
+  <!-- archive:header:start -->
+  <header class="archive-header">
+    <div class="archive-header-inner">
+      <span class="archive-brand">探索档案</span>
+      <nav class="archive-nav" aria-label="档案导航">
+        <!-- 共同导航及本页元数据由同步脚本注入，不手写站点根路径。 -->
+      </nav>
+    </div>
+  </header>
+  <!-- archive:header:end -->
+  <div class="layout">
+    <aside class="sidebar" aria-label="本页目录">
+      <div class="brand">主题简称</div>
+      <nav aria-label="章节目录">
+        <!-- 根据实际章节加入链接；不预置固定学科或固定章节数量。 -->
+      </nav>
+    </aside>
+    <main id="content">
+      <header class="hero">
+        <p class="eyebrow">主题类型或阅读定位</p>
+        <h1>主题标题</h1>
+        <p class="dek">填写本主题的问题、范围，以及希望帮助读者理解的内容。</p>
+        <!-- archive:meta:start -->
+        <div class="archive-meta">
+          <!-- 日期、版本或修订信息由同步脚本根据主题元数据填充。 -->
+        </div>
+        <!-- archive:meta:end -->
+      </header>
+      <div id="topic-body">
+        <!-- 在这里独立组织正文、图示、组件和可选交互。 -->
+      </div>
+    </main>
+  </div>
+  <!-- archive:footer:start -->
+  <footer class="archive-footer">
+    <div class="archive-footer-inner">
+      <p>探索档案</p>
+      <!-- 共同页尾链接及元数据由同步脚本注入。 -->
+    </div>
+  </footer>
+  <!-- archive:footer:end -->
+  <script>
+    /* 可选的主题脚本；正文、图示与默认说明应由静态 HTML 提供。 */
+  </script>
+</body>
+</html>

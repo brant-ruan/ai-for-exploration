@@ -8,6 +8,10 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
+    "sync:index": "node scripts/sync-index.mjs",
+    "sync:interactive": "node scripts/sync-interactive.mjs",
+    "archive:update": "node scripts/update-archive.mjs",
+    "test:archive": "node --test scripts/update-archive.test.mjs",
     "preview": "node scripts/preview.mjs"
   },
   "devDependencies": {

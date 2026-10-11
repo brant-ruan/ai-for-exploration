@@ -1,0 +1,4 @@
+interface:
+  display_name: "知识档案维护"
+  short_description: "在旧内容上修订研究双文件、保留历史版本并统一交互页面样式"
+  default_prompt: "使用 $knowledge-archive 更新这个探索档案，保留旧版本并同步网站与索引。"

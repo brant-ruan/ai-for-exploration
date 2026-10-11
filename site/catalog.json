@@ -1,10 +1,10 @@
 {
   "site": {
-    "title": "知识探索档案",
+    "title": "探索档案",
     "description": "记录使用人工智能辅助广度调研、深度探索与知识管理的尝试。",
     "repository": "https://github.com/brant-ruan/ai-for-exploration",
-    "url": "https://brant-ruan.github.io",
-    "basePath": "/ai-for-exploration"
+    "url": "https://exp.wohin.me",
+    "basePath": ""
   },
   "topics": [
     {
@@ -12,17 +12,18 @@
       "title": "Agent Sandboxing",
       "subtitle": "从容器隔离到受控执行平台",
       "kind": "investigation",
-      "date": "2026-10-11",
+      "created": "2026-10-11",
+      "updated": "2026-10-11",
       "summary": "从容器与云原生安全的经验出发，梳理 agent 工作环境的增量需求、开源实现、业界实践与学术研究，理解隔离、权限委托和环境生命周期之间的关系。",
       "tags": ["AI Agents", "云原生", "安全"],
-      "markdown": "investigation-agent-sandboxing.md",
-      "html": "investigation-agent-sandboxing.html",
+      "markdown": "investigation-agent-sandboxing-latest.md",
+      "html": "investigation-agent-sandboxing-latest.html",
       "assets": [],
-      "facets": [
-        { "title": "执行隔离", "detail": "容器 · VM · Wasm" },
-        { "title": "权限治理", "detail": "策略 · 凭据 · 意图" },
-        { "title": "会话生命周期", "detail": "预热 · 快照 · 分叉" }
-      ]
+      "history": [],
+      "aliases": {
+        "markdown": ["investigation-agent-sandboxing.md"],
+        "html": ["investigation-agent-sandboxing.html"]
+      }
     }
   ]
 }
