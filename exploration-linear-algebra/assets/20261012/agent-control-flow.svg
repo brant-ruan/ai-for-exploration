@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 420" role="img" aria-labelledby="title desc">
+<title id="title">Agent 的表示分析与执行授权</title><desc id="desc">用户任务与不可信工具数据进入模型，经过 embedding、attention 和生成得到候选工具调用。候选调用须由外部执行策略核验来源、参数、权限和确认条件，再进入隔离执行环境。表示检测只能提供信号，不能自行授予权限。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="context-stroke"/></marker></defs>
+<rect width="1000" height="420" rx="12" fill="#fff"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif" fill="#172f44">
+<text x="32" y="42" font-size="23" font-weight="600">同一条数据流，包含不同的安全问题</text>
+<rect x="32" y="98" width="180" height="74" rx="7" fill="#edf3f7" stroke="#8ea9bb"/><text x="50" y="128" font-size="18">用户任务</text><text x="50" y="154" font-size="13">记录请求来源与授权范围</text>
+<rect x="32" y="212" width="180" height="85" rx="7" fill="#f5eee1" stroke="#ba9d72"/><text x="50" y="243" font-size="18">网页 / RAG</text><text x="50" y="268" font-size="14">工具输出等不可信内容</text><text x="50" y="288" font-size="13" fill="#627280">可能混入攻击者指令</text>
+<rect x="271" y="127" width="203" height="137" rx="7" fill="#edf3f7" stroke="#8ea9bb"/><text x="289" y="157" font-size="18">模型计算</text><text x="289" y="190" font-size="15">Embedding → Attention</text><text x="289" y="218" font-size="15">→ 隐状态 → 生成</text><text x="289" y="243" font-size="13" fill="#627280">可研究方向、相似度与扰动</text>
+<rect x="529" y="151" width="162" height="88" rx="7" fill="#edf3f7" stroke="#8ea9bb"/><text x="547" y="182" font-size="18">候选工具调用</text><text x="547" y="207" font-size="14">工具名、参数</text><text x="547" y="228" font-size="14">目标资源</text>
+<rect x="746" y="98" width="222" height="124" rx="7" fill="#eaf2ef" stroke="#8db2ad"/><text x="764" y="130" font-size="18">外部执行策略</text><text x="764" y="160" font-size="15">核验来源、参数与权限</text><text x="764" y="190" font-size="15">按授权条件放行或拒绝</text>
+<rect x="746" y="276" width="222" height="69" rx="7" fill="#eaf2ef" stroke="#8db2ad"/><text x="764" y="306" font-size="18">隔离执行与审计</text><text x="764" y="331" font-size="14">资源范围、网络、生命周期</text>
+<g stroke="#627280" fill="none" stroke-width="2" marker-end="url(#arrow)"><path d="M212 135H240V162H271"/><path d="M212 254H240V225H271"/><path d="M474 195H529"/><path d="M691 195H719V160H746"/><path d="M857 222V276"/></g>
+<text x="572" y="129" font-size="14" fill="#627280">模型建议</text><text x="867" y="253" font-size="14" fill="#286a66">满足策略才执行</text>
+<text x="32" y="382" font-size="16">线性 probe、PCA 或方向干预能提供证据；工具调用是否获准，仍须依据执行策略检查。</text>
+</g></svg>

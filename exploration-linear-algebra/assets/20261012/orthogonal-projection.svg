@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" role="img" aria-labelledby="title desc">
+<title id="title">正交投影与残差</title><desc id="desc">向量 b 等于一二，投影到 u 等于二一所张成的直线，投影 p 等于一点六零点八，残差 b 减 p 等于负零点六一点二。残差与 u 垂直。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="context-stroke"/></marker></defs>
+<rect width="880" height="440" rx="12" fill="#fff"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif" fill="#172f44">
+<text x="32" y="41" font-size="23" font-weight="600">最小二乘：找到离目标最近的可表示向量</text>
+<text x="32" y="73" font-size="15" fill="#627280">二维教学例子 · 坐标等比例 · 可表示集合是 span(u)</text>
+<g stroke="#edf1f4"><path d="M130 100V386M220 100V386M310 100V386M400 100V386M490 100V386M70 170H515M70 260H515M70 350H515"/></g>
+<g stroke="#a3b1bd" stroke-width="1.5" marker-end="url(#arrow)"><path d="M70 350H520"/><path d="M130 386V98"/></g>
+<path d="M70 380L514 158" stroke="#8db2ad" stroke-width="2"/>
+<g fill="none" stroke-width="3" marker-end="url(#arrow)"><path d="M130 350L310 260" stroke="#2b617f"/><path d="M130 350L220 170" stroke="#946730"/><path d="M130 350L274 278" stroke="#286a66"/><path d="M274 278L220 170" stroke="#a54e49" stroke-dasharray="6 4"/></g>
+<path d="M257.9 286.05L249.85 269.95L265.95 261.9" fill="none" stroke="#627280" stroke-width="1.5"/>
+<text x="318" y="262" font-size="18" fill="#2b617f">u = (2, 1)</text><text x="218" y="151" font-size="18" fill="#946730">b = (1, 2)</text><text x="277" y="306" font-size="17" fill="#286a66">p = (1.6, 0.8)</text><text x="143" y="246" font-size="16" fill="#a54e49">r = b − p</text>
+<g font-size="18"><text x="552" y="151">投影系数 = (uᵀb)/(uᵀu)</text><text x="552" y="187">= 4/5 = 0.8</text><text x="552" y="235">p = 0.8u</text><text x="552" y="275">r = (−0.6, 1.2)ᵀ</text><text x="552" y="315">uᵀr = −1.2 + 1.2 = 0</text></g>
+<text x="32" y="414" font-size="16">投影只能保证几何误差最小；它不会自动判断哪些信息属于攻击、哪些信息应被保留。</text>
+</g></svg>

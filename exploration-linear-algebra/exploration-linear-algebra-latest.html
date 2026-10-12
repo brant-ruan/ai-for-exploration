@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <!-- archive:theme-script:start -->
+<script data-archive-theme>
+(() => {
+  'use strict';
+  const key = 'ai-for-exploration-theme';
+  const root = document.documentElement;
+  const normalize = value => value === 'light' || value === 'dark' ? value : null;
+  const media = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  const systemTheme = () => media?.matches ? 'dark' : 'light';
+  let storage = null;
+  let preference = null;
+  let buttons = [];
+  let currentTheme;
+  try {
+    storage = window.localStorage;
+    preference = normalize(storage.getItem(key));
+  } catch {
+    // The in-memory preference still works when storage is unavailable.
+  }
+
+  function updateButtons() {
+    const dark = currentTheme === 'dark';
+    for (const button of buttons) {
+      button.setAttribute('aria-pressed', String(dark));
+      button.title = dark ? '切换到浅色模式' : '切换到深色模式';
+      button.querySelector('[data-theme-icon="moon"]')?.toggleAttribute('hidden', dark);
+      button.querySelector('[data-theme-icon="sun"]')?.toggleAttribute('hidden', !dark);
+    }
+  }
+
+  function applyTheme(theme) {
+    currentTheme = theme;
+    root.setAttribute('data-theme', theme);
+    updateButtons();
+  }
+
+  // This runs synchronously in head, before styles can paint the page.
+  applyTheme(preference ?? systemTheme());
+
+  function enhanceButtons() {
+    buttons = Array.from(document.querySelectorAll('[data-theme-toggle]'));
+    for (const button of buttons) {
+      button.hidden = false;
+      button.addEventListener('click', () => {
+        preference = currentTheme === 'dark' ? 'light' : 'dark';
+        try {
+          storage?.setItem(key, preference);
+        } catch {
+          // Do not make storage permission a prerequisite for switching.
+        }
+        applyTheme(preference);
+      });
+    }
+    updateButtons();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhanceButtons, { once: true });
+  else enhanceButtons();
+
+  const followSystem = () => {
+    if (preference === null) applyTheme(systemTheme());
+  };
+  if (media?.addEventListener) media.addEventListener('change', followSystem);
+  else if (media?.addListener) media.addListener(followSystem);
+
+  window.addEventListener('storage', event => {
+    if (event.key !== key && event.key !== null) return;
+    if (storage && event.storageArea && event.storageArea !== storage) return;
+    preference = normalize(event.newValue);
+    applyTheme(preference ?? systemTheme());
+  });
+})();
+</script>
+<!-- archive:theme-script:end -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从向量、线性变换、投影与 SVD 到 Transformer、LoRA 和 Agent 安全，以可手算例子和六个交互实验重建线性代数直觉。">
+  <title>线性代数：从几何直觉到 LLM 与 Agent 安全 · 探索档案</title>
+  <!-- archive:icon:start -->
+<link data-archive-icon rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23172f44%22%2F%3E%3Cpath%20d%3D%22M16%2017h17v4H20v22h13v4H16zm21%200h11v30H37v-4h7V21h-7z%22%20fill%3D%22%23f6f7f8%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%224%22%20fill%3D%22%2377b5ad%22%2F%3E%3C%2Fsvg%3E">
+<!-- archive:icon:end -->
+  <style id="topic-style">
+    .la-formula { padding:14px 18px; margin:20px 0; overflow:auto; border-left:3px solid var(--archive-accent); background:var(--theme-soft,#edf3f7); color:var(--archive-ink); font:14px/1.9 var(--archive-mono); white-space:pre; }
+    .la-controls { display:flex; flex-wrap:wrap; gap:14px 20px; align-items:end; margin:18px 0; }
+    .la-controls label { display:grid; gap:5px; color:var(--archive-text); font-size:13px; }
+    .la-controls input[type="number"] { width:88px; }
+    .la-controls input[type="range"] { width:180px; accent-color:var(--archive-accent); }
+    .la-controls input,.la-controls select,.la-controls button { padding:5px 8px; border:1px solid var(--theme-control-border,#b7c8d0); border-radius:4px; background:var(--theme-surface,#fff); color:var(--archive-ink); }
+    .la-controls button { cursor:pointer; background:var(--theme-control-bg,#e9f1ef); }
+    .la-controls :disabled { opacity:.6; cursor:default; }
+    .la-matrix-input { display:grid; grid-template-columns:repeat(2,max-content); gap:8px; }
+    .la-output { padding:14px 17px; border-radius:6px; background:var(--theme-success-soft,#eaf2ef); color:var(--archive-ink); font:13px/1.9 var(--archive-mono); white-space:pre-wrap; overflow-wrap:anywhere; }
+    .la-svg-scroll { max-width:100%; overflow:auto; }
+    .la-svg { display:block; width:100%; min-width:520px; height:auto; color:var(--archive-text); }
+    .la-svg text { font-family:var(--archive-font); font-size:14px; fill:var(--archive-text); }
+    .la-svg-wide { min-width:740px; }
+    .la-axis { stroke:var(--theme-diagram-edge,#7f97a7); stroke-width:1.5; }
+    .la-grid { stroke:var(--theme-line,#dce3e8); stroke-width:1; }
+    .la-input { stroke:var(--theme-diagram-blue-stroke,#376e99); fill:var(--theme-diagram-blue,#eaf2f8); }
+    .la-result { stroke:var(--theme-diagram-green-stroke,#2c8575); fill:var(--theme-diagram-green,#e5f2ed); }
+    .la-danger { stroke:var(--red,#a54e49); fill:var(--theme-danger-soft,#f5e6e4); }
+    .la-neutral { fill:var(--theme-diagram-neutral,#fff); stroke:var(--theme-diagram-stroke,#8ea1ad); }
+    .la-svg [fill="none"] { fill:none; }
+    .la-arrow { fill:none; stroke-width:3; stroke-linecap:round; }
+    .la-dash { stroke-dasharray:6 5; }
+    .la-small-caption { margin-top:12px!important; color:var(--archive-muted); font-size:12px; }
+    .la-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:22px 0; }
+    .la-step { padding:15px; background:var(--theme-soft,#edf3f7); border:1px solid var(--archive-line); border-radius:6px; }
+    .la-step b { display:block; color:var(--archive-ink); }
+    .la-symbol { font-family:var(--archive-mono); color:var(--archive-ink); }
+    .la-exercise p { margin-top:14px!important; }
+    .la-reading-list li { margin:12px 0; }
+    .la-badge { display:inline-block; padding:2px 7px; border:1px solid var(--archive-line); border-radius:4px; font-size:11px; color:var(--archive-muted); }
+    @media(max-width:650px) { .la-svg-scroll::after { content:"图示可在此区域横向查看"; display:block; margin-top:8px; color:var(--archive-muted); font-size:12px; } .la-steps { grid-template-columns:1fr; } .la-controls input[type="range"] { width:150px; } .la-formula { font-size:12px; } }
+    @media print { .la-controls { display:none!important; } .la-svg-scroll { overflow:visible; } .la-svg { min-width:0; max-width:100%; } .la-exercise { break-inside:avoid; } .la-formula { white-space:pre-wrap; font-size:9pt; } .la-output { font-size:9pt; } .la-steps { display:block; } .la-step { margin-bottom:8px; } }
+  </style>
+  <!-- archive:style:start -->
+<style data-archive-style>
+/* Shared presentation only. Inject after topic CSS; keep topic controls in topic CSS. */
+:root {
+  --archive-header-height: calc(var(--site-header-height, 88px) + 1px);
+  --archive-max-width: 1400px;
+  --archive-sidebar-width: 232px;
+  --archive-ink: #172f44;
+  --archive-text: #354554;
+  --archive-muted: #627280;
+  --archive-accent: #286a66;
+  --archive-paper: #f7f8fa;
+  --archive-surface: #ffffff;
+  --archive-line: #dce3e8;
+  --archive-radius: 8px;
+  --archive-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --archive-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --archive-space-sm: 12px;
+  --archive-space-md: 24px;
+  --archive-space-lg: 40px;
+  --archive-space-xl: 64px;
+  /* Compatibility aliases for existing authored topic components. */
+  --paper: var(--archive-paper);
+  --white: var(--archive-surface);
+  --ink: var(--archive-ink);
+  --muted: var(--archive-muted);
+  --blue: #2b617f;
+  --pale: #edf3f7;
+  --green: #2f6d63;
+  --mint: #eaf2ef;
+  --amber: #946730;
+  --sand: #f5eee1;
+  --red: #a54e49;
+  --line: var(--archive-line);
+  --radius: var(--archive-radius);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--archive-header-height) + 20px); }
+body { margin: 0; background: var(--archive-paper); color: var(--archive-text); font: 15px/1.9 var(--archive-font); -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+a:hover { color: var(--archive-accent); }
+button, input, select, textarea { font: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
+.skip { position: fixed; top: -80px; left: 20px; z-index: 100; padding: 10px 16px; background: var(--archive-ink); color: var(--theme-inverse, #fff); border-radius: 4px; }
+.skip:focus { top: 12px; color: var(--theme-inverse, #fff); }
+
+/* Site header and footer are supplied by templates/shared/. */
+.archive-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin: 0; color: var(--archive-muted); font: 11px/1.8 var(--archive-font); }
+.archive-meta p { margin: 0; }
+.archive-meta a { color: inherit; }
+.hero .archive-meta { margin-top: 18px; }
+
+/* High-level layout contract: .layout > .sidebar + main. */
+.layout { display: grid; grid-template-columns: var(--archive-sidebar-width) minmax(0,1fr); align-items: start; width: 100%; max-width: var(--archive-max-width); margin: 0 auto; }
+.sidebar { position: sticky; top: var(--archive-header-height); align-self: start; height: calc(100vh - var(--archive-header-height)); max-height: calc(100vh - var(--archive-header-height)); min-width: 0; margin: 0; padding: 30px 20px; overflow: auto; border-right: 1px solid var(--archive-line); background: var(--archive-paper); scrollbar-width: thin; }
+.sidebar .brand { margin: 0; color: var(--archive-ink); font-size: 17px; line-height: 1.5; font-weight: 650; letter-spacing: .02em; overflow-wrap: anywhere; }
+.sidebar nav { display: grid; gap: 4px; margin-top: 24px; }
+.sidebar nav a { display: block; padding: 7px 10px; border-radius: 4px; color: var(--archive-muted); font-size: 12px; line-height: 1.7; text-decoration: none; }
+.sidebar .sidebar-print { display: block; margin-top: 28px; padding: 8px 12px; border: 1px solid var(--archive-line); border-radius: 4px; background: var(--archive-surface); color: var(--archive-muted); font: 11px/1.7 var(--archive-font); cursor: pointer; }
+.sidebar .sidebar-print:disabled { opacity: .6; cursor: default; }
+.sidebar .sidebar-print:hover { color: var(--archive-accent); border-color: var(--archive-accent); }
+.sidebar nav a:hover, .sidebar nav a.current, .sidebar nav a[aria-current="location"] { color: var(--archive-accent); background: var(--theme-success-soft, #eaf2f0); }
+.layout > main { width: 100%; min-width: 0; max-width: none; margin: 0; padding: 42px 44px 64px; }
+.hero { margin: 0; padding: 12px 0 38px; border-bottom: 1px solid var(--archive-line); }
+.hero h1 { max-width: 960px; margin: 8px 0 22px; color: var(--archive-ink); font-size: clamp(32px,3.8vw,48px); font-weight: 650; line-height: 1.4; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.hero h1 span { color: var(--blue); }
+.hero .dek { max-width: 900px; margin-bottom: 20px; color: var(--archive-muted); font-size: 17px; line-height: 1.95; }
+.eyebrow { display: inline-block; margin: 0 0 10px; color: var(--archive-accent); font-size: 10px; font-weight: 650; line-height: 1.7; letter-spacing: .09em; }
+.metadata { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; color: var(--archive-muted); font-size: 11px; }
+.pill { display: inline-flex; padding: 3px 9px; border: 1px solid var(--archive-line); border-radius: 4px; background: var(--archive-surface); color: var(--archive-muted); font-size: 11px; line-height: 1.7; }
+.hero-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-top: 24px; }
+.hero-stat { min-width: 0; padding: 16px 18px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.hero-stat b { display: block; color: var(--archive-ink); font-size: 18px; line-height: 1.6; }
+.hero-stat span { color: var(--archive-muted); font-size: 12px; }
+
+/* Content components: no field-specific sections, visual scores or chart rules. */
+.layout main section { margin-bottom: 24px; padding-top: 52px; scroll-margin-top: 16px; }
+.section-head { display: flex; gap: 18px; margin-bottom: 24px; }
+.section-head > div { min-width: 0; }
+.number { flex-shrink: 0; min-width: 36px; margin-top: 5px; color: var(--archive-accent); font: 500 22px/1.5 var(--archive-mono); }
+.layout main h2 { margin: 0 0 12px; color: var(--archive-ink); font-size: 27px; font-weight: 650; line-height: 1.5; letter-spacing: -.02em; }
+.layout main h3 { margin: 8px 0 12px; color: var(--archive-ink); font-size: 20px; font-weight: 650; line-height: 1.6; }
+.layout main h4 { margin: 22px 0 10px; color: var(--archive-ink); font-size: 16px; line-height: 1.7; }
+.layout main p { margin: 0 0 18px; }
+.layout main strong { font-weight: 650; }
+.lede { max-width: 900px; margin: 0; color: var(--archive-muted); font-size: 16px; line-height: 1.9; }
+small, .small { color: var(--archive-muted); font-size: 12px; }
+.label { color: var(--archive-muted); font-size: 10px; font-weight: 650; letter-spacing: .06em; }
+.grid2, .grid3 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.grid3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.card, .widget, .figure { min-width: 0; margin: 0 0 22px; padding: 24px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.card p:last-child, .widget > p:last-child { margin-bottom: 0; }
+.widget-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.layout main .widget-title h3 { margin: 0; }
+.figure figcaption { margin-top: 14px; color: var(--archive-muted); font-size: 12px; line-height: 1.8; }
+.table-wrap { max-width: 100%; margin: 24px 0; overflow: auto; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); scrollbar-width: thin; }
+.table-wrap table { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--archive-surface); font-size: 13px; line-height: 1.85; }
+.table-wrap th, .table-wrap td { padding: 12px 14px; border-bottom: 1px solid var(--archive-line); text-align: left; vertical-align: top; }
+.table-wrap th { background: var(--theme-table-head-bg, #edf3f5); color: var(--archive-ink); font-weight: 650; }
+.table-wrap tr:last-child td { border-bottom: 0; }
+.table-wrap a { overflow-wrap: anywhere; }
+.stack { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 16px; padding: 16px 18px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.layer:nth-child(2n) { background: var(--theme-soft, #f0f4f6); }
+.layer > * { min-width: 0; }
+.layer b { color: var(--archive-ink); font-size: 16px; }
+.layer span { color: var(--archive-muted); font-size: 13px; }
+.note { margin: 22px 0; padding: 17px 20px; border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; background: var(--pale); font-size: 14px; }
+.note.green { border-color: var(--green); background: var(--mint); }
+.note.amber { border-color: var(--amber); background: var(--sand); }
+.note p:last-child { margin-bottom: 0; }
+.rule { margin: 30px 0; border-top: 1px solid var(--archive-line); }
+.source { font-size: 11px; line-height: 1.8; }
+.code { margin: 22px 0; padding: 20px 22px; overflow: auto; border-radius: var(--archive-radius); background: var(--theme-code-bg, var(--archive-ink)); color: var(--theme-code-text, #e9f2f6); font: 12px/1.85 var(--archive-mono); white-space: pre-wrap; word-break: break-word; }
+.layout main details { margin: 16px 0; padding: 16px 20px; border: 1px solid var(--archive-line); border-radius: var(--archive-radius); background: var(--archive-surface); }
+.layout main summary { cursor: pointer; font-weight: 650; }
+.layout main details > :last-child { margin-bottom: 0; }
+.layout main blockquote { margin: 24px 0; padding: 15px 20px; border-left: 3px solid var(--theme-quote-line, #709b96); background: var(--theme-quote-bg, #f0f5f4); }
+.footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--archive-line); color: var(--archive-muted); font-size: 12px; }
+
+@media (max-width: 1150px) {
+  :root { --archive-sidebar-width: 210px; }
+  .layout > main { padding: 34px 30px 56px; }
+  .sidebar { padding: 26px 16px; }
+  .grid3 { grid-template-columns: minmax(0,1fr); }
+  .hero-grid { gap: 10px; }
+}
+@media (max-width: 820px) {
+  .layout { display: block; }
+  .sidebar { position: static; top: auto; height: auto; max-height: none; padding: 18px 20px; border-right: 0; border-bottom: 1px solid var(--archive-line); }
+  .sidebar .brand { font-size: 15px; }
+  .sidebar nav { display: flex; gap: 5px; margin-top: 13px; overflow: auto; }
+  .sidebar .sidebar-print { display: none; }
+  .sidebar nav a { flex-shrink: 0; padding: 7px 9px; font-size: 11px; white-space: nowrap; }
+  .layout > main { padding: 26px 20px 48px; }
+  .hero { padding: 4px 0 30px; }
+  .hero h1 { font-size: clamp(30px,6vw,38px); line-height: 1.45; }
+  .hero .dek { font-size: 15px; }
+  .hero-grid, .grid2, .grid3 { grid-template-columns: minmax(0,1fr); }
+  .hero-stat { padding: 13px 16px; }
+  .layout main section { padding-top: 40px; }
+  .section-head { gap: 12px; }
+  .number { min-width: 28px; font-size: 19px; }
+  .layout main h2 { font-size: 24px; }
+  .layout main h3 { font-size: 18px; }
+  .lede { font-size: 15px; }
+  .card, .widget, .figure { padding: 18px; }
+  .layer { grid-template-columns: minmax(0,1fr); gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+@media print {
+  @page { margin: 16mm; }
+  body { background: white; color: #172f44; font-size: 10pt; line-height: 1.75; }
+  .archive-header, .sidebar, .skip { display: none !important; }
+  .layout { display: block; max-width: none; }
+  .layout > main { max-width: none; padding: 0; }
+  .hero { padding: 0 0 20px; }
+  .hero h1 { font-size: 28pt; }
+  .hero .dek { font-size: 11pt; }
+  .layout main section { padding-top: 28px; }
+  .layout main h2 { font-size: 18pt; }
+  .layout main h3 { font-size: 13pt; }
+  .grid2, .grid3, .hero-grid { display: block; }
+  .card, .widget, .figure { break-inside: avoid; padding: 16px; border-color: #bcc6cd; }
+  .table-wrap { overflow: visible; }
+  .table-wrap table { min-width: 0; font-size: 8pt; }
+  .table-wrap th, .table-wrap td { padding: 6px 8px; }
+  /* Reset only print sizing, never an SVG's coordinates, labels or colors. */
+  .layout .figure > svg { min-width: 0; max-width: 100%; height: auto; }
+  .code { overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 8pt; }
+  .archive-meta { font-size: 8pt; }
+  .note { print-color-adjust: exact; }
+}
+
+/* Shared masthead: one presentation for the site and standalone archives. */
+:root {
+  --site-header-height: 88px;
+  --site-header-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --site-header-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+.skip-link { position: fixed; z-index: 100; top: -80px; left: 20px; margin: 0; padding: 9px 18px; border-radius: 0; color: #fff; background: #172f44; font: 14px/1.6 var(--site-header-font); text-decoration: none; }
+.skip-link:focus { top: 12px; color: #fff; }
+.site-header { position: sticky; top: 0; z-index: 40; margin: 0; padding: 0; border-bottom: 1px solid var(--theme-line, #dfe5ea); background: var(--theme-header-bg, rgba(247,248,250,.97)); color: var(--theme-ink, #172f44); }
+.site-header .header-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; width: 100%; max-width: 1240px; height: var(--site-header-height); margin: 0 auto; padding: 0 48px; }
+.site-header .brand { display: inline-flex; align-items: center; gap: 15px; flex-shrink: 0; margin: 0; color: var(--theme-ink, #172f44); font: 650 17px/1.4 var(--site-header-font); letter-spacing: normal; text-decoration: none; white-space: nowrap; }
+.site-header .brand small { display: block; margin-top: 3px; color: var(--theme-muted, #6b7884); font-size: 11px; font-weight: 450; line-height: 1.4; letter-spacing: .025em; }
+.site-header .brand-mark { padding-right: 7px; font: 400 32px/1 var(--site-header-mono); letter-spacing: -7px; }
+.site-header .brand-mark i { font-style: normal; color: var(--theme-accent, #286a66); }
+.site-header .site-nav { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px 28px; min-width: 0; margin: 0; font: 13px/1.8 var(--site-header-font); }
+.site-header .site-nav a { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; color: var(--theme-text, #354554); text-decoration: none; white-space: nowrap; }
+.site-header .brand:hover, .site-header .site-nav a:hover, .site-header .site-nav a[aria-current="page"] { color: var(--theme-accent, #286a66); }
+.site-header svg { display: block; width: 16px; height: 16px; flex-shrink: 0; }
+.skip-link:focus-visible, .site-header a:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
+.site-header .theme-toggle { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; margin: 0; padding: 6px; border: 1px solid var(--theme-line, #dfe5ea); border-radius: 4px; background: var(--theme-surface, #fff); color: var(--theme-ink, #172f44); cursor: pointer; }
+.site-header .theme-toggle:hover { color: var(--theme-accent, #286a66); border-color: var(--theme-accent, #286a66); }
+.site-header .theme-toggle[aria-pressed="true"] { background: var(--theme-control-bg, #edf4f3); color: var(--theme-accent, #286a66); }
+.site-header .theme-toggle:focus-visible { outline: 3px solid var(--theme-focus, #347e79); outline-offset: 4px; }
+@media (max-width: 780px) {
+  :root { --site-header-height: 73px; }
+  .site-header .header-inner { padding-left: 25px; padding-right: 25px; }
+  .site-header .site-nav { column-gap: 20px; font-size: 12px; }
+}
+@media (max-width: 600px) {
+  .site-header .header-inner { padding-left: 21px; padding-right: 21px; }
+  .site-header .brand { gap: 10px; font-size: 15px; }
+  .site-header .brand small { font-size: 9px; }
+  .site-header .brand-mark { font-size: 27px; letter-spacing: -6px; }
+  .site-header .site-nav { column-gap: 12px; font-size: 11px; }
+  .site-header .repo-link svg { display: none; }
+}
+@media (max-width: 360px) {
+  .site-header .site-nav { column-gap: 6px; font-size: 10px; }
+}
+@media print {
+  .site-header, .skip-link { display: none !important; }
+}
+
+/* One footer presentation for generated pages and standalone interactive HTML. */
+.site-footer { margin: 0; padding: 0; border-top: 1px solid var(--theme-line, #dce3e8); background: var(--theme-surface, #fff); }
+.site-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 28px; max-width: 1240px; margin: 0 auto; padding: 26px 48px 28px; color: var(--theme-muted, #64748b); font: 11px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.site-footer .footer-copy { font-weight: 400; }
+.site-footer .footer-dot { color: var(--theme-muted, #b5c1ca); padding: 0 9px; }
+.site-footer a { display: inline-flex; align-items: center; gap: 6px; color: var(--theme-muted, #64748b); text-decoration: none; }
+.site-footer a:hover { color: var(--theme-accent, #287b76); }
+.site-footer a:focus-visible { outline: 3px solid var(--theme-focus, #287b76); outline-offset: 4px; }
+.site-footer svg { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; }
+@media (max-width: 780px) { .site-footer .footer-inner { padding-left: 25px; padding-right: 25px; } }
+@media (max-width: 600px) {
+  .site-footer .footer-inner { display: block; padding: 23px 21px; font-size: 10px; }
+  .site-footer .footer-copy { display: block; }
+  .site-footer .footer-inner a { margin-top: 10px; }
+}
+@media print {
+  .site-footer { display: block !important; margin-top: 24px; background: #fff; break-inside: avoid; }
+  .site-footer .footer-inner { max-width: none; padding: 16px 0 0; font-size: 8pt; }
+  .site-footer a { color: #172f44; }
+}
+
+/* Palette applies only on screen; print retains the original light colors. */
+:root { color-scheme: light; }
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #e0eaf1;
+    --text: #c9d5e0;
+    --muted: #a2b3c2;
+    --accent: #85c7bc;
+    --accent-soft: #213d3a;
+    --paper: #101923;
+    --white: #172430;
+    --line: #344653;
+    --archive-ink: var(--ink);
+    --archive-text: var(--text);
+    --archive-muted: var(--muted);
+    --archive-accent: var(--accent);
+    --archive-paper: var(--paper);
+    --archive-surface: var(--white);
+    --archive-line: var(--line);
+    --blue: #8fc1e6;
+    --pale: #1d2f3d;
+    --green: #88ccb4;
+    --mint: #1d3432;
+    --amber: #dfbd82;
+    --sand: #3b3021;
+    --red: #e6a29a;
+    --theme-ink: var(--ink);
+    --theme-text: var(--text);
+    --theme-muted: var(--muted);
+    --theme-accent: var(--accent);
+    --theme-line: var(--line);
+    --theme-surface: var(--white);
+    --theme-link: var(--blue);
+    --theme-soft: var(--pale);
+    --theme-soft-hover: #213d3a;
+    --theme-control-border: #4b6070;
+    --theme-control-bg: #213a39;
+    --theme-control-hover: #2a4a45;
+    --theme-success-soft: var(--mint);
+    --theme-danger-soft: #3c272c;
+    --theme-success-line: #527e6d;
+    --theme-danger-line: #946a66;
+    --theme-code-bg: #0b131d;
+    --theme-code-text: #d9e8f4;
+    --theme-code-comment: #9dc9b6;
+    --theme-diagram-neutral: #172430;
+    --theme-diagram-blue: #1e3447;
+    --theme-diagram-green: #1d3833;
+    --theme-diagram-stroke: #657d90;
+    --theme-diagram-blue-stroke: #78b2dc;
+    --theme-diagram-green-stroke: #80bfa8;
+    --theme-diagram-edge: #89a5b9;
+    --theme-header-bg: rgba(16,25,35,.97);
+    --theme-inverse: #101923;
+    --theme-primary-hover: #c2d8e7;
+    --theme-feature-bg: #172430;
+    --theme-focus: #99d9d0;
+    --theme-code-inline-text: #a7cbe5;
+    --theme-code-inline-bg: #213345;
+    --theme-code-block-bg: #13212e;
+    --theme-link-hover: #b6e3db;
+    --theme-text-decoration: #5f8b85;
+    --theme-quote-bg: #1c3033;
+    --theme-quote-line: #709f94;
+    --theme-table-head-bg: #21313e;
+    --theme-table-row-bg: #1a2937;
+  }
+}
+/* CSS fallback also works when scripts are disabled. */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --ink: #e0eaf1;
+    --text: #c9d5e0;
+    --muted: #a2b3c2;
+    --accent: #85c7bc;
+    --accent-soft: #213d3a;
+    --paper: #101923;
+    --white: #172430;
+    --line: #344653;
+    --archive-ink: var(--ink);
+    --archive-text: var(--text);
+    --archive-muted: var(--muted);
+    --archive-accent: var(--accent);
+    --archive-paper: var(--paper);
+    --archive-surface: var(--white);
+    --archive-line: var(--line);
+    --blue: #8fc1e6;
+    --pale: #1d2f3d;
+    --green: #88ccb4;
+    --mint: #1d3432;
+    --amber: #dfbd82;
+    --sand: #3b3021;
+    --red: #e6a29a;
+    --theme-ink: var(--ink);
+    --theme-text: var(--text);
+    --theme-muted: var(--muted);
+    --theme-accent: var(--accent);
+    --theme-line: var(--line);
+    --theme-surface: var(--white);
+    --theme-link: var(--blue);
+    --theme-soft: var(--pale);
+    --theme-soft-hover: #213d3a;
+    --theme-control-border: #4b6070;
+    --theme-control-bg: #213a39;
+    --theme-control-hover: #2a4a45;
+    --theme-success-soft: var(--mint);
+    --theme-danger-soft: #3c272c;
+    --theme-success-line: #527e6d;
+    --theme-danger-line: #946a66;
+    --theme-code-bg: #0b131d;
+    --theme-code-text: #d9e8f4;
+    --theme-code-comment: #9dc9b6;
+    --theme-diagram-neutral: #172430;
+    --theme-diagram-blue: #1e3447;
+    --theme-diagram-green: #1d3833;
+    --theme-diagram-stroke: #657d90;
+    --theme-diagram-blue-stroke: #78b2dc;
+    --theme-diagram-green-stroke: #80bfa8;
+    --theme-diagram-edge: #89a5b9;
+    --theme-header-bg: rgba(16,25,35,.97);
+    --theme-inverse: #101923;
+    --theme-primary-hover: #c2d8e7;
+    --theme-feature-bg: #172430;
+    --theme-focus: #99d9d0;
+    --theme-code-inline-text: #a7cbe5;
+    --theme-code-inline-bg: #213345;
+    --theme-code-block-bg: #13212e;
+    --theme-link-hover: #b6e3db;
+    --theme-text-decoration: #5f8b85;
+    --theme-quote-bg: #1c3033;
+    --theme-quote-line: #709f94;
+    --theme-table-head-bg: #21313e;
+    --theme-table-row-bg: #1a2937;
+  }
+}
+</style>
+<!-- archive:style:end -->
+</head>
+<body>
+  <!-- archive:header:start -->
+<a class="skip-link archive-skip" href="#content">跳到主要内容</a>
+<header class="site-header archive-header">
+  <div class="header-inner archive-header-inner">
+    <a class="brand archive-brand" href="../"><span class="brand-mark" aria-hidden="true">[<i>·</i>]</span><span>探索档案<small>ai-for-exploration</small></span></a>
+    <nav class="site-nav archive-nav" aria-label="站点导航"><a href="../#topics">主题档案</a><a href="./report/">深度报告（最新）</a><a class="repo-link" href="https://github.com/brant-ruan/ai-for-exploration" aria-label="在 GitHub 查看仓库">GitHub <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><button class="theme-toggle" type="button" data-theme-toggle hidden aria-label="深色模式" aria-pressed="false" title="切换到深色模式"><svg data-theme-icon="moon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M20.7 13.1A8.6 8.6 0 0 1 10.9 3.3 8.7 8.7 0 1 0 20.7 13.1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><svg data-theme-icon="sun" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" hidden><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></nav>
+  </div>
+</header>
+<!-- archive:header:end -->
+  <div class="layout">
+    <aside class="sidebar" aria-label="本页目录">
+      <div class="brand">线性代数与安全</div>
+      <nav aria-label="章节目录">
+        <a href="#vectors">01 向量与度量</a><a href="#maps">02 矩阵与变换</a><a href="#rank">03 秩与信息损失</a><a href="#coordinates">04 基与坐标变换</a><a href="#projection">05 投影与最小二乘</a><a href="#eigen">06 特征值与二次型</a><a href="#svd">07 SVD 与条件数</a><a href="#statistics">08 协方差与异常</a><a href="#gradient">09 梯度与链式法则</a><a href="#embedding">10 表示与归一化</a><a href="#attention">11 Attention 的计算</a><a href="#interventions">12 低秩更新与干预</a><a href="#cybersecurity">13 网络安全案例</a><a href="#agent">14 Agent 的信任边界</a><a href="#practice">15 学习与研究实验</a><a href="#sources">16 证据与来源</a>
+      </nav>
+      <button class="sidebar-print" type="button" data-archive-print disabled>打印 / 保存为 PDF</button>
+    </aside>
+    <main id="content">
+      <header class="hero">
+        <h1>线性代数：从几何直觉到 LLM 与 Agent 安全</h1>
+        <p class="dek">矩阵怎样改变信息，模型怎样选择和混合信息，安全分析又能从这些变化里看见什么？从一支二维箭头开始，把计算、几何与研究问题连接起来。</p>
+        <!-- archive:meta:start -->
+<div class="archive-meta"><span>创建 <time datetime="2026-10-12">2026-10-12</time></span><span>内容更新 <time datetime="2026-10-12">2026-10-12</time></span></div>
+<!-- archive:meta:end -->
+      </header>
+      <div id="topic-body">
+        <section id="vectors">
+          <div class="section-head"><span class="number">01</span><div><h2>先把向量看成一个对象，再选择坐标</h2><p class="lede">向量表示可相加、可缩放的量；坐标是我们记录它的一种方式。</p></div></div>
+          <p>把一次网络连接写成 <span class="la-symbol">x=(字节数, 持续时间, 失败次数)ᵀ</span>，已经在做向量化：把一个复杂对象压进有序的实数列表。这里的三个数有不同单位，不能直接把“长”解释为“危险”。先辨认每个坐标的意义，再决定缩放、标准化和比较方式。向量空间的加法是逐坐标相加；数乘把每个坐标乘以同一标量。神经网络的隐藏向量也遵守这些运算，却通常没有每个坐标对应一个人类概念的保证。</p>
+          <p>本教程的几何推导默认实数域和<strong>列向量</strong>：<span class="la-symbol">x∈ℝⁿ，A∈ℝᵐˣⁿ，Ax∈ℝᵐ</span>。转置 <span class="la-symbol">xᵀ</span> 把列写成行。向量相同不代表输入对象相同：如果特征提取只记录总流量，它就已经丢掉包顺序。研究 LLM 的表示时，也应先问表示来自哪个层、哪个 token、哪个模型，以及前处理是什么。</p>
+          <div class="la-formula">x=(3,4)ᵀ，y=(4,0)ᵀ
+xᵀy=12；‖x‖₂=√(3²+4²)=5
+cos θ=(xᵀy)/(‖x‖₂‖y‖₂)=12/(5×4)=0.6</div>
+          <figure class="figure"><div class="la-svg-scroll"><svg class="la-svg" viewBox="0 0 520 280" role="img" aria-labelledby="vec-title"><title id="vec-title">向量三四与四零的长度和夹角，内积为十二</title><path class="la-axis" d="M60 230H460 M60 230V30"/><path class="la-grid la-dash" d="M180 70V230 M60 70H180"/><path class="la-input la-arrow" d="M60 230L180 70"/><path class="la-result la-arrow" d="M60 230L220 230"/><circle class="la-input" cx="180" cy="70" r="5"/><circle class="la-result" cx="220" cy="230" r="5"/><text x="192" y="68">x=(3,4)，长度 5</text><text x="230" y="234">y=(4,0)，长度 4</text><text x="78" y="203">θ≈53.1°</text><text x="54" y="253">0</text><text x="117" y="263">每格一单位；角度与长度分开看</text></svg></div><figcaption>点积等于“一个向量在另一方向的有符号投影长度”乘以另一向量长度。负点积表示夹角大于 90°，不自动表示语义矛盾。</figcaption></figure>
+          <p>欧氏距离关心差值的绝对长度，余弦相似度关心方向。对非零向量，余弦忽略正数缩放：<span class="la-symbol">x</span> 与 <span class="la-symbol">100x</span> 的余弦为 1，却可能表示完全不同的流量规模。点积同时受角度和范数影响。零向量没有可定义的余弦；工程实现中的小常数只是避免除零，不会给它凭空增加方向。</p>
+          <p class="note">把相似度当作检索信号很有用，把相似度当作权限、可信度或同一意图的证明则超出了公式。度量是否合理取决于表示和任务；高维直觉应通过分布、标注和对照实验检查。</p>
+          <details class="la-exercise"><summary>练习：x=(1,1)，y=(2,2)，z=(1,−1)。谁与 x 最相似？</summary><p>按余弦，y 与 x 为 1，z 与 x 为 0；按欧氏距离，‖x−y‖=√2，‖x−z‖=2。这个例子里两种比较顺序一致，但含义不同。再比较 y 与 100x：方向完全一致，距离很大。为流量检测选择度量时，要先决定是否希望规模变化影响判断。</p></details>
+          <p class="source">基础定义与几何解释：<a href="https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/">MIT 18.06</a>；<a href="https://mml-book.github.io/">Mathematics for Machine Learning</a>，第 2–3 章。</p>
+        </section>
+
+        <section id="maps">
+          <div class="section-head"><span class="number">02</span><div><h2>矩阵的每一列，是一支基向量的去向</h2><p class="lede">读矩阵乘法时，不要先背行乘列；先看整个坐标网格发生了什么。</p></div></div>
+          <p>线性映射 <span class="la-symbol">T</span> 满足 <span class="la-symbol">T(αx+βy)=αT(x)+βT(y)</span>。这保证知道基向量的去向后，就知道所有向量的去向。二维标准基是 <span class="la-symbol">e₁=(1,0)ᵀ</span> 和 <span class="la-symbol">e₂=(0,1)ᵀ</span>；矩阵 <span class="la-symbol">A</span> 的两列分别是 <span class="la-symbol">Ae₁</span>、<span class="la-symbol">Ae₂</span>。因此 <span class="la-symbol">A(x₁,x₂)ᵀ=x₁Ae₁+x₂Ae₂</span>。矩阵不是一张静态数字表，而是一套同时作用于所有输入的规则。</p>
+          <div class="la-formula">A=[1 1; 0 1]，e₁↦(1,0)ᵀ，e₂↦(1,1)ᵀ
+x=(1,1)ᵀ=e₁+e₂ ⇒ Ax=(2,1)ᵀ
+det(A)=1×1−1×0=1</div>
+          <p>这个变换把单位正方形剪切成平行四边形。行列式给出有符号面积缩放：绝对值为面积倍数，负号表示定向翻转。二维行列式为零时，两个输出基向量共线，整个平面压进一条线或一个点。行列式只适用于方阵；高维信息损失更普遍的语言是秩和零空间。</p>
+          <div class="widget" id="matrix-widget"><div class="widget-title"><h3>动手：剪切、旋转与塌缩</h3><span class="la-badge">二维合成示例</span></div>
+            <div class="la-controls"><label for="matrix-preset">选择矩阵<select id="matrix-preset" disabled><option value="shear">剪切</option><option value="rotate">旋转 90°</option><option value="singular">秩 1：压成直线</option><option value="zero">秩 0：压成点</option><option value="reflect">镜像与缩放</option></select></label><div class="la-matrix-input"><label for="mat-a">a₁₁<input id="mat-a" type="number" min="-4" max="4" step="0.1" value="1" disabled></label><label for="mat-b">a₁₂<input id="mat-b" type="number" min="-4" max="4" step="0.1" value="1" disabled></label><label for="mat-c">a₂₁<input id="mat-c" type="number" min="-4" max="4" step="0.1" value="0" disabled></label><label for="mat-d">a₂₂<input id="mat-d" type="number" min="-4" max="4" step="0.1" value="1" disabled></label></div><label for="mat-x">x₁<input id="mat-x" type="number" min="-3" max="3" step="0.1" value="1" disabled></label><label for="mat-y">x₂<input id="mat-y" type="number" min="-3" max="3" step="0.1" value="1" disabled></label><button type="button" id="matrix-reset" disabled>恢复剪切例子</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="matrix-svg" viewBox="0 0 520 340" role="img" aria-labelledby="mat-title"><title id="mat-title">矩阵将原始网格剪切，第一基向量到一零，第二基向量到一一，输入一一到二一</title><g id="matrix-original" class="la-grid"><path d="M180 70V270 M220 70V270 M260 70V270 M300 70V270 M340 70V270 M160 90H360 M160 130H360 M160 170H360 M160 210H360 M160 250H360"/></g><g id="matrix-grid" class="la-result" opacity=".45" fill="none"><path d="M100 250L260 90 M140 250L300 90 M180 250L340 90 M220 250L380 90 M260 250L420 90 M100 250H260 M140 210H300 M180 170H340 M220 130H380 M260 90H420"/></g><path class="la-axis" d="M30 170H490 M260 310V25"/><g id="matrix-shape"><polygon points="260,170 300,170 340,130 300,130" class="la-result" opacity=".45"/><path d="M260 170L300 170" class="la-input la-arrow"/><path d="M260 170L300 130" class="la-result la-arrow"/><path d="M260 170L340 130" class="la-danger la-arrow"/><circle cx="340" cy="130" r="5" class="la-danger"/></g><text x="22" y="326">蓝线 Ae₁；青线 Ae₂；红线 Ax；浅灰为原网格</text></svg></div>
+            <div class="la-output" id="matrix-output" aria-live="polite">Ax=(2.000, 1.000)ᵀ；det=1.000；rank=2；单位面积变为 1.000。</div>
+            <p class="la-small-caption">默认剪切保留所有输入信息。改成秩 1 后，不同输入可能落到同一点；图形塌缩不表示某一种语义自动被删除。网格会随视图缩放，数值输出是判断面积倍数的依据。</p>
+            <noscript><p class="note">当前显示默认剪切：A=[1 1; 0 1]，x=(1,1)ᵀ，Ax=(2,1)ᵀ，行列式为 1，秩为 2。控件需要 JavaScript；核心解释与图示已保留。</p></noscript>
+          </div>
+          <p>矩阵复合有顺序：<span class="la-symbol">BAx</span> 表示先 A 后 B，一般 <span class="la-symbol">AB≠BA</span>。神经网络里常见 <span class="la-symbol">Wx+b</span> 是仿射映射，除非 <span class="la-symbol">b=0</span>，它不会把原点映到原点，所以不属于严格线性映射。再接 ReLU、softmax 或门控，整个网络更不是单个矩阵；但每一段线性运算仍然能局部拆解和检查。</p>
+          <details class="la-exercise"><summary>练习：A=[1 2; 0 0]。哪些输入会变成零？</summary><p>Ax=(x₁+2x₂,0)ᵀ；变成零的条件是 x₁=−2x₂，所以所有 t(−2,1)ᵀ 都在零空间。矩阵的第一行保留一个线性组合，第二行没有提供新信息。任意两个相差这个零空间方向的输入都产生相同输出。</p></details>
+        </section>
+
+        <section id="rank">
+          <div class="section-head"><span class="number">03</span><div><h2>秩告诉你：保留了几种独立变化</h2><p class="lede">方程有没有解、解是否唯一、哪些输入无法辨认，是同一个几何问题的三个侧面。</p></div></div>
+          <p>列空间 <span class="la-symbol">Col(A)</span> 是所有 <span class="la-symbol">Ax</span> 可能到达的输出；零空间 <span class="la-symbol">Null(A)</span> 是所有被映成零的输入。秩是列空间维数，也等于行空间维数。对 <span class="la-symbol">A∈ℝᵐˣⁿ</span>，秩–零度公式是 <span class="la-symbol">rank(A)+dim Null(A)=n</span>：输入中的 n 个独立自由度，分成被保留的部分和被压掉的部分。</p>
+          <div class="la-formula">贯穿例子：A=[1 0; 1 1; 0 1]∈ℝ³ˣ²
+a₁=(1,1,0)ᵀ，a₂=(0,1,1)ᵀ，rank(A)=2
+Ax=(x₁, x₁+x₂, x₂)ᵀ，因此输出必须满足 y₂=y₁+y₃
+b=(1,2,2)ᵀ 不满足 2=1+2，所以 Ax=b 无精确解</div>
+          <p>这里没有输入信息损失：两列独立，<span class="la-symbol">Null(A)={0}</span>。但输出空间是三维里的二维平面，某些目标永远不可达。<strong>“无法拟合这个输出”和“不能恢复输入”不是同一件事。</strong>消元只是在系统地找独立约束；初等行操作保留方程组的解集合，而不应被误解成原始特征的语义保持。</p>
+          <div class="la-steps"><div class="la-step"><b>能否到达 b？</b>b∈Col(A) 才有解。</div><div class="la-step"><b>到达后能否区分输入？</b>Null(A)={0} 才最多一个解。</div><div class="la-step"><b>无法到达的分量在哪里？</b>Col(A) 的正交补是 Null(Aᵀ)。</div></div>
+          <p>贯穿例子的左零空间由 <span class="la-symbol">n=(1,−1,1)ᵀ</span> 张成，因为 <span class="la-symbol">Aᵀn=0</span>。任何模型预测 <span class="la-symbol">Ax</span> 都与 n 正交；目标中沿 n 的部分必须成为残差。这将直接解释下一节的最小二乘。不要把左零空间和输入零空间混淆：前者在 ℝᵐ 中描述无法解释的输出方向，后者在 ℝⁿ 中描述无法观察的输入方向。</p>
+          <p class="note">安全特征工程中的秩缺陷可能来自重复传感器或冗余特征，也可能来自有意压缩。低秩本身没有“安全”或“危险”的标签；要追踪丢掉了哪些变化，以及攻击者是否能利用这些不可见方向。浮点计算还要区分精确秩与按阈值定义的数值秩。</p>
+          <details class="la-exercise"><summary>练习：只观察两个传感器的总和 s=x₁+x₂，能识别谁贡献了流量吗？</summary><p>观察矩阵为 [1 1]，秩 1，零空间由 (1,−1)ᵀ 张成。(3,2) 与 (4,1) 都得到 s=5，因此不能仅从 s 还原来源。增加独立观察 t=x₁−x₂ 后，矩阵 [1 1; 1 −1] 满秩，两个未知量才可以唯一恢复。</p></details>
+        </section>
+
+        <section id="coordinates">
+          <div class="section-head"><span class="number">04</span><div><h2>换一组基，关系仍在，坐标会变</h2><p class="lede">表示中的“第 317 维”没有天然语义；方向和子空间往往比单个坐标更稳健。</p></div></div>
+          <p>基是一组线性独立且张成整个空间的向量。把基向量放进可逆方阵 B 的列中，原坐标和新坐标满足 <span class="la-symbol">x=Bc</span>，所以 <span class="la-symbol">c=B⁻¹x</span>。变化的是描述对象的数值，向量所表示的对象没有因此变化。若输入和输出都使用这组基，同一个线性算子的矩阵变为 <span class="la-symbol">B⁻¹AB</span>；这叫相似变换。</p>
+          <div class="la-formula">B=[1 1; 1 −1]，x=(3,1)ᵀ
+c=(2,1)ᵀ，因为 2(1,1)ᵀ+1(1,−1)ᵀ=(3,1)ᵀ
+B⁻¹=(1/2)[1 1; 1 −1]</div>
+          <p>正交矩阵 Q 满足 <span class="la-symbol">QᵀQ=I</span>，逆就是转置。换到正交基时，长度和点积保持：<span class="la-symbol">‖Qᵀx‖₂=‖x‖₂</span>。这解释了为什么 PCA 的正交旋转不会凭空改变数据总能量，只是把变化重新排列到不同坐标轴。如果基不是正交的，新坐标的普通点积不再自动等于原空间点积；需要相应的度量矩阵。</p>
+          <p>可逆不代表容易数值求解。两支基向量几乎平行时，要靠两个很大的反向系数表示一个很小的垂直分量，微小测量误差就会导致很大的坐标变化。这是病态问题，而不是“计算机算错了”。实际解 <span class="la-symbol">Ax=b</span> 时优先调用线性求解器，不先显式形成 <span class="la-symbol">A⁻¹</span>；下一阶段会用奇异值量化不稳定性。</p>
+          <p class="note">表征研究里，一个正交旋转可以把原来集中在单坐标的信号分散到许多坐标，同时保持线性可解码性。观察到某个神经元与标签相关，是有用线索；声称它是概念的唯一载体，需要干预和对照证据。</p>
+          <details class="la-exercise"><summary>练习：若 Q 是二维 90° 旋转，x=(3,4)ᵀ，旋转后的范数会变吗？</summary><p>Q=[0 −1; 1 0]，Qx=(−4,3)ᵀ，范数仍为 5。因为 QᵀQ=I，(Qx)ᵀ(Qx)=xᵀx。反射也是正交变换，却会改变定向；是否保持长度与是否保持定向要分开判断。</p></details>
+        </section>
+
+        <section id="projection">
+          <div class="section-head"><span class="number">05</span><div><h2>无法精确解释时，找最近的可解释分量</h2><p class="lede">最小二乘把目标拆成列空间中的预测与垂直于列空间的残差。</p></div></div>
+          <p>先投影到一条直线。给定非零方向 a，要在所有 <span class="la-symbol">ca</span> 中寻找最接近 b 的点。最短距离处，残差 <span class="la-symbol">b−ca</span> 与 a 垂直，所以 <span class="la-symbol">aᵀ(b−ca)=0</span>，得到 <span class="la-symbol">c=(aᵀb)/(aᵀa)</span>。这是几何约束推导出的公式，和“把二维箭头的影子投到斜线”是同一件事。</p>
+          <div class="widget" id="projection-widget"><div class="widget-title"><h3>动手：投影与岭回归的收缩</h3><span class="la-badge">方向固定 a=(1,1)ᵀ</span></div>
+            <div class="la-controls"><label for="proj-b1">目标 b₁<input id="proj-b1" type="number" min="-4" max="4" step="0.1" value="2" disabled></label><label for="proj-b2">目标 b₂<input id="proj-b2" type="number" min="-4" max="4" step="0.1" value="1" disabled></label><label for="ridge-lambda">惩罚 λ<input id="ridge-lambda" type="range" min="0" max="6" step="0.1" value="0" disabled></label><button type="button" id="projection-reset" disabled>恢复默认</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="projection-svg" viewBox="0 0 520 340" role="img" aria-labelledby="proj-title"><title id="proj-title">目标二一投影到方向一一，预测一点五一点五，垂直残差零点五负零点五</title><path class="la-axis" d="M35 230H490 M180 315V30"/><path class="la-result la-dash" d="M80 330L460 -50"/><g id="projection-shape"><path class="la-input la-arrow" d="M180 230L280 180"/><path class="la-result la-arrow" d="M180 230L255 155"/><path class="la-danger la-dash la-arrow" d="M255 155L280 180"/><circle class="la-input" cx="280" cy="180" r="5"/><circle class="la-result" cx="255" cy="155" r="5"/></g><text x="32" y="324">蓝：目标 b；青：预测 ca；红虚线：残差</text></svg></div>
+            <div class="la-output" id="projection-output" aria-live="polite">λ=0.000；c=(b₁+b₂)/(2+λ)=1.500
+预测=(1.500, 1.500)ᵀ；残差=(0.500, −0.500)ᵀ
+aᵀ残差=0.000；‖残差‖₂=0.707</div>
+            <p class="la-small-caption">默认 λ=0 是正交投影。λ&gt;0 最小化 ‖ca−b‖²+λc²，系数收缩，残差一般不再垂直于 a。它仍预测在同一条直线上，却不是距离 b 最近的点。</p>
+            <noscript><p class="note">默认 b=(2,1)ᵀ，c=3/2，预测=(1.5,1.5)ᵀ。若 λ=2，则 c=3/4，预测=(0.75,0.75)ᵀ，残差=(1.25,0.25)ᵀ，点积 aᵀ残差=1.5。</p></noscript>
+          </div>
+          <p>对一般矩阵，最小化 <span class="la-symbol">‖Ax−b‖₂²</span>，一阶条件是 <span class="la-symbol">Aᵀ(Ax−b)=0</span>。满列秩时得到唯一解 <span class="la-symbol">x̂=(AᵀA)⁻¹Aᵀb</span>。这适合推导，不代表实现时要显式求逆；QR 或 SVD 求解通常更稳健，因为形成 <span class="la-symbol">AᵀA</span> 会平方二范数条件数。列不独立时，最小二乘预测仍唯一，系数可能不唯一；伪逆 <span class="la-symbol">A⁺b</span> 选择最小范数的解。</p>
+          <div class="la-formula">贯穿例子：AᵀA=[2 1; 1 2]，Aᵀb=(3,4)ᵀ
+x̂=(2/3,5/3)ᵀ；Ax̂=(2/3,7/3,5/3)ᵀ
+r=b−Ax̂=(1/3,−1/3,1/3)ᵀ；Aᵀr=0；‖r‖²=1/3</div>
+          <p>QR 分解给这件事另一种计算组织。满列秩 A 可以写成 <span class="la-symbol">A=QR</span>，Q 的列是列空间的正交基，R 是可逆上三角矩阵。先求目标在这些基上的坐标 <span class="la-symbol">Qᵀb</span>，再用回代解 <span class="la-symbol">Rx=Qᵀb</span>；预测就是 <span class="la-symbol">QQᵀb</span>。Gram–Schmidt 展示“逐个减掉已有投影再归一化”的思路，数值库则常用更稳定的实现。</p>
+          <p>岭回归最小化 <span class="la-symbol">‖Ax−b‖²+λ‖x‖²</span>，解为 <span class="la-symbol">(AᵀA+λI)⁻¹Aᵀb</span>，λ&gt;0 时即使 A 秩亏也唯一。它通过牺牲部分拟合来抑制大系数。不同特征的缩放影响惩罚含义；给字节数和秒数的系数施加相同数值惩罚，不意味着对两种物理量公平。</p>
+          <p class="note">线性 probe 本质上也在寻找预测标签的线性组合。良好的拟合说明标签在当前表示里可线性预测；它不证明模型在完成原任务时使用这条预测路径。数据泄漏、同源样本和模板差异都可能让 probe 学到捷径。</p>
+          <details class="la-exercise"><summary>练习：为什么贯穿例子的残差一定沿 (1,−1,1)ᵀ？</summary><p>因为最小二乘一阶条件给出 Aᵀr=0，而 A 的左零空间是一维，由 (1,−1,1)ᵀ 张成。r 正是 b 在这个方向的投影：nᵀb=1，nᵀn=3，所以 r=(1/3)n。理解这个关系后，可以先用几何检查解，再检查系数计算。</p></details>
+        </section>
+
+        <section id="eigen">
+          <div class="section-head"><span class="number">06</span><div><h2>特征向量找不转向的方向，二次型看曲率</h2><p class="lede">对称矩阵的谱把耦合的坐标问题，拆成互相正交的一维问题。</p></div></div>
+          <p>方阵 A 的特征向量 v 是满足 <span class="la-symbol">Av=λv</span> 的非零向量。变换后它仍在同一直线上：λ&gt;0 同向，λ&lt;0 反向，λ=0 被压为零。特征值分析的是输入输出在同一空间的算子，因此不能直接给任意长方阵谈特征值。一般实矩阵可能有复特征值，也可能不能对角化。</p>
+          <p>实对称矩阵 S 的情况更好：存在正交 Q 和实对角 Λ，使 <span class="la-symbol">S=QΛQᵀ</span>。把 x 换成特征坐标 <span class="la-symbol">z=Qᵀx</span>，二次型变成 <span class="la-symbol">xᵀSx=Σᵢλᵢzᵢ²</span>。这直接连接优化、协方差和能量。所有特征值非负时 S 为半正定（PSD）；全部严格正时为正定（PD）。仅仅“矩阵元素非负”不保证 PSD；仅仅“对角线为正”也不保证 PSD。</p>
+          <div class="la-formula">S=AᵀA=[2 1; 1 2]
+q₁=(1,1)ᵀ/√2，λ₁=3；q₂=(1,−1)ᵀ/√2，λ₂=1
+xᵀSx=3z₁²+z₂²=‖Ax‖²≥0</div>
+          <figure class="figure"><div class="la-svg-scroll"><svg class="la-svg" viewBox="0 0 560 300" role="img" aria-labelledby="eigen-title"><title id="eigen-title">二次型在两个正交特征方向上的曲率分别为三和一，等高线为椭圆</title><path class="la-axis" d="M70 150H470 M270 260V30"/><g transform="translate(270 150) rotate(-45)"><ellipse rx="60" ry="104" class="la-result" fill-opacity=".5"/><ellipse rx="95" ry="165" class="la-result" fill="none"/><path class="la-input la-arrow" d="M-110 0H110"/><path class="la-result la-arrow" d="M0 -130V130"/></g><text x="353" y="65">q₁：曲率 3</text><text x="70" y="70">q₂：曲率 1</text><text x="110" y="284">等高线：3z₁²+z₂²=常数</text></svg></div><figcaption>同一个能量水平在曲率更大的方向上允许更小位移。图示只解释二次型，不是某个真实模型损失面的测量。</figcaption></figure>
+          <p>若函数是 <span class="la-symbol">f(x)=½xᵀSx−cᵀx</span>，梯度为 <span class="la-symbol">Sx−c</span>，Hessian 为 S。PSD 意味着这个二次函数凸；PD 意味着严格凸并有唯一最小点。深度网络的总体损失通常不是这类全局凸二次函数，但 Hessian 的局部谱仍可描述某个点附近的曲率。局部近似有效范围与训练状态必须一起说明。</p>
+          <p class="note">不要把谱半径和任意扰动的最大放大率混为一谈。对称矩阵可用特征值控制欧氏范数放大；非正规矩阵即使特征值很小，也可能有很大的瞬时放大。输入输出放大的一般工具是奇异值。</p>
+          <details class="la-exercise"><summary>练习：S=[1 2; 2 1] 的元素都为正，它是 PSD 吗？</summary><p>不是。其特征方向 (1,1) 对应 3，(1,−1) 对应 −1。取 x=(1,−1)ᵀ，xᵀSx=−2。只需找到一个二次型为负的向量，就能否定半正定性。</p></details>
+        </section>
+
+        <section id="svd">
+          <div class="section-head"><span class="number">07</span><div><h2>SVD：换到输入方向，缩放，再映到输出方向</h2><p class="lede">奇异值统一描述低秩近似、能量保留、伪逆和数值不稳定。</p></div></div>
+          <p>任意实矩阵都有奇异值分解 <span class="la-symbol">A=UΣVᵀ</span>。把输入写到右奇异向量坐标中，按非负奇异值 σᵢ 缩放，再沿左奇异向量输出；长方阵还可能嵌入更大空间或丢弃方向。紧致形式只保留 r 个非零奇异值，<span class="la-symbol">Uᵣ∈ℝᵐˣʳ，Σᵣ∈ℝʳˣʳ，Vᵣ∈ℝⁿˣʳ</span>。U、V 的列分别正交，左右空间不必有相同维数。正交变换可能包含旋转或反射；“两次旋转”只是部分情形的二维直觉。</p>
+          <div class="la-formula">A=Σᵢ σᵢuᵢvᵢᵀ；σ₁≥σ₂≥…≥0
+截断到 k 项：Aₖ=Σᵢ≤ₖ σᵢuᵢvᵢᵀ
+‖A−Aₖ‖₂=σₖ₊₁；‖A−Aₖ‖F=√(Σᵢ&gt;ₖ σᵢ²)
+约定秩 r 之后的 σᵢ=0；k=r 时误差为 0
+贯穿例子 A 的奇异值为 √3 和 1，来自 AᵀA 的特征值 3 和 1</div>
+          <p>截断 SVD 在谱范数和 Frobenius 范数下给出最佳秩至多 k 近似。这是明确的矩阵误差结论，不能直接推出“下游任务精度最佳”或“安全属性保留最佳”。能量较低的方向可能携带少见但关键的信息。反过来，数据里的大奇异值也可能是重复文本、采集偏差或流量规模，而非研究者关心的语义。</p>
+          <div class="widget" id="svd-widget"><div class="widget-title"><h3>动手：保留能量与保留信息</h3><span class="la-badge">A=R(30°) diag(3,σ₂) R(−20°)ᵀ</span></div>
+            <div class="la-controls"><label for="svd-second">第二奇异值 σ₂<input id="svd-second" type="range" min="0" max="3" step="0.05" value="1" disabled></label><label for="svd-rank">近似保留项数<select id="svd-rank" disabled><option value="1">1 项：秩至多 1</option><option value="2">2 项：完整矩阵</option></select></label><button type="button" id="svd-reset" disabled>恢复 σ₂=1</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="svd-svg" viewBox="0 0 520 330" role="img" aria-labelledby="svd-title"><title id="svd-title">单位圆经奇异值三和一的矩阵映成椭圆，秩一近似将短轴压为零</title><path class="la-axis" d="M30 165H490 M260 305V25"/><g id="svd-shape" transform="translate(260 165) rotate(-30)"><ellipse rx="135" ry="45" class="la-input" fill-opacity=".4"/><path class="la-result la-arrow" d="M-135 0H135"/><path class="la-input la-dash" d="M0 -45V45"/></g><text x="35" y="318">蓝色完整椭圆；青色为截断后可到达的输出</text></svg></div>
+            <div class="la-output" id="svd-output" aria-live="polite">σ₁=3.000，σ₂=1.000；保留 1 项
+相对平方 Frobenius 能量=9/10=90.0%；‖A−A₁‖F=1.000
+‖A−A₁‖₂=1.000；κ₂(A)=3.000；A₁ 的秩=1</div>
+            <p class="la-small-caption">默认保留 90% 平方 Frobenius 能量，但第二输入方向的信息全部丢失。把 σ₂ 拉到 0，完整矩阵本身奇异；把它拉到很小，求逆会很敏感。图示的旋转固定，便于只观察奇异值的影响。</p>
+            <noscript><p class="note">默认 σ=(3,1)，秩 1 近似误差为 1，保留能量为 90%，原矩阵条件数为 3。σ₂=0 时完整矩阵秩为 1，普通逆不存在；σ₂=0.05 时条件数为 60。</p></noscript>
+          </div>
+          <p>二范数算子范数 <span class="la-symbol">‖A‖₂=σ₁</span> 给出最大方向的放大率。对可逆方阵，<span class="la-symbol">κ₂(A)=σmax/σmin</span>；若输入沿一个缩得很小的方向，求逆要把测量误差放大回来。贯穿例子是满列秩长方阵，也可用非零奇异值之比描述最小二乘的敏感性，但不存在普通方阵逆。秩亏时，“最大非零奇异值 / 最小非零奇异值”只是有效子空间的条件性，不等于整个问题可逆。</p>
+          <p>伪逆沿非零奇异方向乘 <span class="la-symbol">1/σᵢ</span>，零奇异方向保持零。岭回归沿每个方向使用 <span class="la-symbol">σᵢ/(σᵢ²+λ)</span>，避免对微小 σᵢ 无限制放大。这个滤波视角比“往对角线加一点数”更能说明正则化付出的偏差与得到的稳定性。</p>
+          <details class="la-exercise"><summary>练习：diag(1,0.001) 的输出第二坐标误差为 0.001，逆解误差有多大？</summary><p>逆矩阵为 diag(1,1000)，第二坐标误差变成 1。原矩阵条件数为 1000。误差放大取决于方向，不能简单说所有误差都放大 1000 倍；条件数描述最坏方向的相对敏感性。</p></details>
+        </section>
+
+        <section id="statistics">
+          <div class="section-head"><span class="number">08</span><div><h2>协方差把“距离远”改写为“偏离常态方向”</h2><p class="lede">PCA 找变化最大的方向，Mahalanobis 距离把不同方向的自然波动纳入比较。</p></div></div>
+          <p>把 n 个样本作为行堆叠，得到 <span class="la-symbol">X∈ℝⁿˣᵈ</span>。先减去列均值得到中心化 <span class="la-symbol">Xc</span>，当 n≥2 时，样本协方差为 <span class="la-symbol">C=XcᵀXc/(n−1)</span>。对角线是每个特征的方差，非对角元素是共同变化；C 是 PSD，因为任意 <span class="la-symbol">vᵀCv=‖Xcv‖²/(n−1)≥0</span>。它不是因果图：流量和时间共同增长不说明其中一个造成另一个。</p>
+          <p>若 <span class="la-symbol">Xc=UΣVᵀ</span>，PCA 主方向是 V 的列，解释方差为 <span class="la-symbol">σᵢ²/(n−1)</span>，主成分坐标是 <span class="la-symbol">XcV</span>。最大方差方向是最佳线性重构方向，但未必是分类方向。是否中心化、是否标准化、样本是否代表未来环境，都会改变 PCA 的结果；做评估时，这些统计量只能从训练集拟合。</p>
+          <div class="la-formula">合成正常分布：μ=(0,0)ᵀ，C=diag(9,1)
+欧氏距离 dE(x)=√(x₁²+x₂²)
+Mahalanobis 距离 dM(x)=√((x−μ)ᵀC⁻¹(x−μ))=√(x₁²/9+x₂²)
+x=(3,0)ᵀ：dE=3，dM=1；y=(0,2)ᵀ：dE=2，dM=2</div>
+          <div class="widget" id="mahal-widget"><div class="widget-title"><h3>动手：长轴很远，短轴才更异常</h3><span class="la-badge">合成协方差 diag(9,1)</span></div>
+            <div class="la-controls"><label for="mahal-x">位置 x₁<input id="mahal-x" type="range" min="-5" max="5" step="0.1" value="3" disabled></label><label for="mahal-y">位置 x₂<input id="mahal-y" type="range" min="-3" max="3" step="0.1" value="0" disabled></label><button type="button" id="mahal-short" disabled>比较短轴点 (0,2)</button><button type="button" id="mahal-reset" disabled>恢复长轴点 (3,0)</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="mahal-svg" viewBox="0 0 520 340" role="img" aria-labelledby="mahal-title"><title id="mahal-title">协方差九一对应水平长轴椭圆，三零点的欧氏距离为三而 Mahalanobis 距离为一</title><path class="la-axis" d="M30 165H490 M260 295V25"/><ellipse cx="260" cy="165" rx="210" ry="70" class="la-result la-dash" fill="none"/><ellipse cx="260" cy="165" rx="105" ry="35" class="la-result" fill-opacity=".35"/><circle cx="260" cy="165" r="70" class="la-input la-dash" fill="none"/><g id="mahal-point"><path class="la-danger la-arrow" d="M260 165L365 165"/><circle class="la-danger" cx="365" cy="165" r="6"/></g><text x="51" y="305">实线椭圆 dM=1；虚线椭圆 dM=2</text><text x="51" y="326">蓝色虚线圆 dE=2；红点为观察值</text></svg></div>
+            <div class="la-output" id="mahal-output" aria-live="polite">x=(3.000,0.000)ᵀ；dE=3.000；dM=1.000
+阈值 dM&gt;2：未超出。此阈值只是演示选择，不是检测器实测阈值。</div>
+            <p class="la-small-caption">椭圆表示等 Mahalanobis 距离，不是概率保证。若数据来自二维高斯，且使用已知的总体 μ、C，则 dM² 服从 χ²₂ 分布；从有限训练集估计 μ、C 后需要不同校准，不能原样套用。多峰、重尾和漂移也可能破坏高斯假设。</p>
+            <noscript><p class="note">长轴点 (3,0) 的欧氏距离 3 大于短轴点 (0,2) 的 2，但 Mahalanobis 距离分别为 1 和 2，顺序逆转。协方差建模改变了“常见变化”和“罕见变化”的权重。</p></noscript>
+          </div>
+          <p>白化变换 <span class="la-symbol">z=C^(−1/2)(x−μ)</span> 将正定协方差下的 Mahalanobis 距离转成 z 的欧氏长度。这里 C^(−1/2) 是逆平方根：若 C=QΛQᵀ，则它是 Q diag(λᵢ^(−1/2)) Qᵀ。样本少于维度、特征重复或估计噪声较大时 C 可能奇异或病态；收缩估计、<span class="la-symbol">C+εI</span> 或受限子空间是常见处理选择。使用伪逆会忽略零特征值方向，可能把训练中没有出现的新方向也忽略，必须明确检测含义。</p>
+          <p class="note">安全异常检测的“正常”是由采集样本定义的。只用工作日流量训练，节假日任务可能被判异常；如果训练集中混入攻击，协方差也可能把攻击方向吸收到常态中。异常分数是调查线索，身份认证与访问控制需要独立证据。</p>
+          <details class="la-exercise"><summary>练习：为何两个坐标重复会使协方差奇异？</summary><p>若 x₂=x₁，所有中心化样本都在 (1,1) 方向上，(1,−1) 方向的方差为零。C 的秩至多为 1，普通逆不存在。单纯加入 εI 可以使其可逆，但引入了一个人为的方差尺度；要报告 ε 并检查它是否决定了异常排名。</p></details>
+        </section>
+
+        <section id="gradient">
+          <div class="section-head"><span class="number">09</span><div><h2>梯度传回来的，是输出敏感性的线性组合</h2><p class="lede">Jacobian 是非线性函数在一个点附近的局部线性地图。</p></div></div>
+          <p>对向量函数 <span class="la-symbol">f:ℝⁿ→ℝᵐ</span>，Jacobian <span class="la-symbol">Jf(x)∈ℝᵐˣⁿ</span> 的第 i 行第 j 列是 <span class="la-symbol">∂fᵢ/∂xⱼ</span>。小扰动满足 <span class="la-symbol">f(x+δ)≈f(x)+Jf(x)δ</span>。这个近似只在局部有效；扰动跨越激活函数分段边界、改变 token 化或触发离散工具调用时，要重新评估。把文本替换当作任意连续向量扰动，也是额外的可实现性假设。</p>
+          <div class="la-formula">L(x)=½‖Ax−b‖² ⇒ ∇L=Aᵀ(Ax−b)，H=AᵀA
+贯穿例子在 x=(0,0)ᵀ：∇L=−Aᵀb=(−3,−4)ᵀ
+若 y=Wx，损失对 y 的梯度是 g，则对 x 的梯度是 Wᵀg
+若 h=g(f(x))，Jh=Jg(f(x))Jf(x)</div>
+          <p>为什么反向传播里总有转置？前向把输入扰动 <span class="la-symbol">δx</span> 映成 <span class="la-symbol">Wδx</span>；损失变化为 <span class="la-symbol">gᵀWδx=(Wᵀg)ᵀδx</span>，因此输入梯度是 Wᵀg。它不是“把矩阵乘法倒着运行”或求 W 的逆。自动微分通常计算向量–Jacobian 乘积，不显式存下整个巨大的 Jacobian。</p>
+          <p>对二次型梯度下降，更新是 <span class="la-symbol">xₜ₊₁=xₜ−η(Sxₜ−c)</span>。沿第 i 个特征方向的误差乘 <span class="la-symbol">1−ηλᵢ</span>。S 正定时，<span class="la-symbol">0&lt;η&lt;2/λmax</span> 保证这个固定二次问题收敛。贯穿例子的 λmax=3，η=0.5 时两个方向的因子为 −0.5 和 0.5；这解释了一个方向会交替越过最小点。深度学习的实际学习率还受随机批次、非线性和优化器状态影响。</p>
+          <p class="note">在固定线性近似下，‖δ‖₂≤ε 时，最大化一阶损失变化的扰动为 ε∇L/‖∇L‖₂（梯度非零时）。这是局部数学结论。实际攻击还需要满足输入约束、攻击者可访问性与成功判定；大梯度不自动等于可利用漏洞，小梯度也不保证稳健。</p>
+          <details class="la-exercise"><summary>练习：为什么 J 的最大奇异值能衡量局部敏感性，却不能独自证明全局安全？</summary><p>因为 ‖Jδ‖₂≤σmax(J)‖δ‖₂，只控制当前点的一阶变化。有限距离上的路径可能经过具有不同 Jacobian 的区域，还存在二阶误差；文本 token 和工具行为通常还有离散变化。若要全局结论，需对允许输入集合和整条路径给出额外界或验证。</p></details>
+        </section>
+
+        <section id="embedding">
+          <div class="section-head"><span class="number">10</span><div><h2>隐藏表示：方向有用，语义需要证据</h2><p class="lede">从 token 查表、线性读出到归一化，把模型张量的维度对齐。</p></div></div>
+          <p>若词表大小为 V、隐藏维度为 d，嵌入矩阵 <span class="la-symbol">E∈ℝⱽˣᵈ</span> 的第 i 行是第 i 个 token 的向量。输入 token id 查表得到向量；这可写成 one-hot 行向量乘 E。为了贴近常见 Transformer 写法，之后把 T 个 token <strong>按行堆叠</strong>成 <span class="la-symbol">X∈ℝᵀˣᵈ</span>。单独拿出某一 token 时，可以把该行转置为几何列向量 x；这只是记号切换，不改变计算。</p>
+          <div class="la-formula">单 token 列向量：y=Wcol x，Wcol∈ℝᵐˣᵈ
+整段 token 行堆叠：Y=XWrow，Wrow∈ℝᵈˣᵐ
+两种写法对应 Wrow=Wcolᵀ；不要把维度相同误认为权重布局相同</div>
+          <p>上下文化表示会随上下文、层和位置变化。同一个字符串在不同上下文里没有保证映到同一隐藏向量。余弦检索也应区分专门训练的句向量与随手抽出的 token 激活；池化方式、范数和模型训练目标都影响度量含义。输出层常以隐藏行向量乘读出矩阵得到 logits，再用 softmax 得到词表上的概率。</p>
+          <p>RMSNorm 用均方根缩放各坐标，再乘可学习缩放参数。对单向量，它形如 <span class="la-symbol">RMSNorm(x)=g⊙x/√(mean(x²)+ε)</span>。它不减均值；LayerNorm 会减均值再按方差缩放。忽略 ε 与 g 时，正比例缩放输入会被消去，但实际实现中 ε、可学习参数和周围残差结构都影响行为。归一化是依赖 x 的非线性运算，不能全局看作一个固定矩阵。</p>
+          <p>残差连接把子模块输出加回输入：<span class="la-symbol">h←h+f(h)</span>。这使许多层在同一个隐藏维度里读写，但“共享空间”不表示所有层的同一方向具有完全相同语义。研究方向干预必须固定干预位置、归一化前后和 token 选择，否则看似相同的公式可能作用于不同量。</p>
+          <p class="note">可解码性、相关性和因果作用依次提出更强问题。一个线性分类器能读出“拒绝”标签，说明相关信息可读；移除方向后行为变化是干预证据；要归因到特定机制，还需排除一般损伤、模板信息与分布变化。</p>
+          <details class="la-exercise"><summary>练习：X 是 128×4096，投影权重 W 是 4096×256。输出多大？</summary><p>XW 为 128×256：token 数不变，每个 token 的特征维度变为 256。若拿单 token 作列向量，需使用 256×4096 的 Wᵀ。检查矩阵内侧维度是否一致，是阅读模型代码时成本最低的错误检测方法。</p></details>
+          <p class="source">归一化原始机制：<a href="https://arxiv.org/abs/1910.07467v1">Root Mean Square Layer Normalization</a>；Transformer 张量组织见 <a href="https://arxiv.org/abs/1706.03762v7">Attention Is All You Need</a>。</p>
+        </section>
+
+        <section id="attention">
+          <div class="section-head"><span class="number">11</span><div><h2>Attention：匹配决定权重，Value 决定被混合的内容</h2><p class="lede">先做两次不同意义的矩阵乘法，再让 softmax 引入非线性。</p></div></div>
+          <p>对按行堆叠的 <span class="la-symbol">X∈ℝᵀˣᵈ</span>，某个头用三个权重得到 <span class="la-symbol">Q=XWQ，K=XWK，V=XWV</span>。Q、K 为 T×dₖ，V 为 T×dᵥ。乘 <span class="la-symbol">QKᵀ</span> 得到 T×T 的匹配分数：第 i 行是第 i 个 query 对各 key 的评价。除以 √dₖ，再加 mask，按行 softmax；每行必须至少有一个未被 mask 的有限 logit；这个前提下，所得 <span class="la-symbol">P∈ℝᵀˣᵀ</span> 每行非负且和为 1。整行均为 −∞ 时，数学 softmax 未定义，实现需另行处理。最后 <span class="la-symbol">O=PV</span> 得到 T×dᵥ。</p>
+          <div class="la-formula">P=softmax_row(QKᵀ/√dₖ + M)，O=PV
+单行：pⱼ=exp(sⱼ/τ)/Σₖexp(sₖ/τ)，o=Σⱼpⱼvⱼ
+教学例 q=(1,0)，k₁=(2√2,0)，k₂=(√2,0)，k₃=(0,√2)
+除以 √2 后 s=(2,1,0)，τ=1，p≈(0.665,0.245,0.090)</div>
+          <p>这里额外引入温度 τ 是为了教学比较，它不是声称原始公式必有可调温度。τ 变小会加强已有分数排序；τ 变大使权重更平缓。softmax 对每行加同一常数不变，所以数值实现常先减行最大值以避免溢出。因果 mask 排除未来 token，padding mask 排除无效位置；“能注意到”与“被允许作为指令”是不同层面的规则。</p>
+          <div class="widget" id="attention-widget"><div class="widget-title"><h3>动手：固定匹配，改变 Value</h3><span class="la-badge">一个 query，三个 key/value</span></div>
+            <div class="la-controls"><label for="att-temperature">教学温度 τ<input id="att-temperature" type="range" min="0.2" max="3" step="0.05" value="1" disabled></label><label for="att-delta">第三个 Value 的改变量 Δ<input id="att-delta" type="range" min="0" max="10" step="0.1" value="0" disabled></label><button type="button" id="attention-reset" disabled>恢复默认</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="attention-svg" viewBox="0 0 580 270" role="img" aria-labelledby="att-title"><title id="att-title">三个固定匹配分数二一零产生权重约零点六六五、零点二四五、零点零九，第三个 value 可改变但匹配不变</title><text x="25" y="30">权重 pⱼ：三个来源，不能仅凭来源名称推断信任</text><text x="25" y="75">任务 token</text><text x="25" y="130">可信上下文</text><text x="25" y="185">外部文本</text><g id="attention-bars"><rect x="160" y="51" width="232.8" height="32" class="la-input"/><rect x="160" y="106" width="85.7" height="32" class="la-result"/><rect x="160" y="161" width="31.5" height="32" class="la-danger"/><text x="404" y="74">0.665</text><text x="257" y="129">0.245</text><text x="203" y="184">0.090</text></g><text x="25" y="232">v₁=(1,0)，v₂=(0,1)，v₃=(−1+Δ,0)</text><text x="25" y="257">Δ 只改 value；q、k 与 score 固定</text></svg></div>
+            <div class="la-output" id="attention-output" aria-live="polite">τ=1.000；p=(0.665,0.245,0.090)；Δ=0.000
+o=(0.575,0.245)；相对 Δ=0 的输出变化=(0.000,0.000)
+输出变化范数=0.000；在固定 p 下，变化精确等于 p₃Δ。</div>
+            <p class="la-small-caption">第三来源仅有 9% 权重；若其 value 改变量为 10，输出仍会改变约 0.900。低 attention 权重不意味着影响可以忽略。这里是人为固定 Q、K 的线性混合实验，不是可复现的 prompt injection，也没有测量真实模型攻击成功率。</p>
+            <noscript><p class="note">默认输出约 (0.575,0.245)。在默认温度下把 Δ 从 0 改为 10，权重不变，输出第一坐标约增加 0.900。真实文本变化通常同时改变 Q、K、V 与后续层，不能直接外推。</p></noscript>
+          </div>
+          <p>在固定 P 时，O 对 V 是线性的；完整 self-attention 中 P 自己也依赖 X，因而整体非线性。多个头拼接后还要经过输出投影、残差和其他层。单个头内部的凸组合属性，也不意味着最终输出的每个特征都是原输入的凸组合。</p>
+          <h3>把基础公式接到现代 LLM</h3>
+          <p>RoPE（旋转位置编码）把 query/key 的成对坐标做与位置相关的正交旋转。用列向量看位置 m 的 query 与位置 n 的 key，点积为 <span class="la-symbol">(R(m)q)ᵀR(n)k=qᵀR(n−m)k</span>，相对位置进入了匹配。每支向量自己的范数保持，但不同位置施加不同旋转，二者点积不保证保持。这个例子把第 4 节的正交性直接接到了模型机制。</p>
+          <p>以 Llama 3 论文描述的模型为例，其结构还采用 GQA、RMSNorm 与 SwiGLU。GQA 让一组 query heads 共享 key/value heads；不能按“每个 query head 都有独立 K/V”推算缓存规模。SwiGLU 把线性投影、非线性激活与逐元素乘法组成门控，不能化成一个固定矩阵。这些变化保留了线性代数骨架，同时要求逐层核对具体形状与实现。</p>
+          <p class="source">位置旋转关系：<a href="https://arxiv.org/abs/2104.09864v5">RoFormer</a>，第 3.2 节；模型结构例子：<a href="https://arxiv.org/abs/2407.21783v1">The Llama 3 Herd of Models</a>，第 3.2 节。此处引用原始结构描述，不是对所有当前模型的概括。</p>
+          <p class="note">attention 权重是计算中真实存在的中间量，但不是天然的因果解释或可信度分数。相同权重可对应不同 value 范数、输出投影和下游响应。讨论安全影响时应同时检查内容路径、实际干预与任务结果。</p>
+          <details class="la-exercise"><summary>练习：T=100，dₖ=64，dᵥ=32。QKᵀ 和 PV 各是什么形状？</summary><p>Q、K 是 100×64，QKᵀ 是 100×100；P 同样是 100×100，V 是 100×32，PV 是 100×32。缩放因子为 √64=8。若增加到 200 个 token，朴素分数矩阵的元素数会从 10,000 变为 40,000；这只是该矩阵规模变化，实际运行内存还依赖算法与实现。</p></details>
+          <p class="source">原始 attention 公式与多头结构：<a href="https://arxiv.org/abs/1706.03762v7">Attention Is All You Need</a>，第 3 节。</p>
+        </section>
+
+        <section id="interventions">
+          <div class="section-head"><span class="number">12</span><div><h2>低秩权重更新与表示干预：相似的数学，不同的对象</h2><p class="lede">LoRA 改权重，方向消融改激活；都需要问改动被限制在哪个子空间。</p></div></div>
+          <p>对列向量写法的权重 <span class="la-symbol">W∈ℝᵐˣⁿ</span>，LoRA 用 <span class="la-symbol">ΔW=BA</span> 参数化更新，其中 <span class="la-symbol">B∈ℝᵐˣʳ，A∈ℝʳˣⁿ</span>，r 远小于 m、n。训练时冻结基础 W，学习低秩因子，并按配置施加缩放。rank(BA)≤r；参数量从 mn 变为 r(m+n)。例如 4096×4096 的矩阵，r=8 时因子有 65,536 个参数，相比完整矩阵的 16,777,216 个约为 1/256；这里只比较这一对矩阵的参数，不包含整个模型与优化器。</p>
+          <p>LoRA 不等于先对原 W 做截断 SVD。它限制的是<strong>更新</strong>的秩，基础权重可以满秩；学习的因子也不需要正交。低秩参数化并不自动提供安全隔离：很小的参数更新仍可能通过后续非线性和离散生成造成显著行为变化。要判断微调保留了什么，仍需任务与安全评估。</p>
+          <p>下文用 u 表示单位方向；它与上面 LoRA 的秩超参数 r 是不同对象。权重更新作用于矩阵，方向编辑作用于某个层和 token 的激活向量。</p>
+          <div class="la-formula">单位方向 u，‖u‖₂=1：P=I−uuᵀ
+方向消融：h′=Ph=h−u(uᵀh)，于是 uᵀh′=0
+部分消融：h′=h−αu(uᵀh)，0≤α≤1
+方向注入：h′=h+βu；它移动表示，不是正交投影</div>
+          <div class="widget" id="intervention-widget"><div class="widget-title"><h3>动手：删除方向，也会删除重叠的正常信息</h3><span class="la-badge">h=(2,1)ᵀ；正常参考 n=(1,0)ᵀ</span></div>
+            <div class="la-controls"><label for="intervention-mode">操作<select id="intervention-mode" disabled><option value="remove">方向消融</option><option value="steer">方向注入</option></select></label><label for="intervention-angle">方向 u 的角度<input id="intervention-angle" type="range" min="0" max="90" step="1" value="45" disabled></label><label for="intervention-alpha">消融强度 α<input id="intervention-alpha" type="range" min="0" max="1" step="0.05" value="1" disabled></label><label for="intervention-beta">注入量 β<input id="intervention-beta" type="range" min="-3" max="3" step="0.1" value="1" disabled></label><button type="button" id="intervention-reset" disabled>恢复默认消融</button></div>
+            <div class="la-svg-scroll"><svg class="la-svg" id="intervention-svg" viewBox="0 0 520 350" role="img" aria-labelledby="intervene-title"><title id="intervene-title">把二一向量沿四十五度方向的分量消去后得到零点五负零点五，正常一零向量也会损失信息</title><path class="la-axis" d="M30 200H490 M200 310V25"/><g id="intervention-shape"><path class="la-neutral la-dash" d="M90 310L370 30"/><path class="la-input la-arrow" d="M200 200L300 150"/><path class="la-result la-arrow" d="M200 200L225 225"/><path class="la-danger la-dash" d="M225 225L300 150"/><circle class="la-input" cx="300" cy="150" r="5"/><circle class="la-result" cx="225" cy="225" r="5"/></g><text x="22" y="329">蓝：原 h；青：编辑后 h′；虚线：方向与改变量</text></svg></div>
+            <div class="la-output" id="intervention-output" aria-live="polite">u=(0.707,0.707)ᵀ；h′=(0.500,−0.500)ᵀ
+uᵀh=2.121；uᵀh′=0.000；‖h′−h‖₂=2.121
+同样消融正常参考 n 后：‖Pn‖₂=0.707，保留平方范数=50.0%。</div>
+            <p class="la-small-caption">u 在此由你指定，没有通过模型数据学得，也没有“恶意方向”的实测语义。默认完整投影确实清除沿 u 的分量，同时把正常参考的一半平方范数删掉。注入模式展示几何移动；不应称作可靠控制模型意图。</p>
+            <noscript><p class="note">默认 u=(1,1)ᵀ/√2，h 的投影系数为 3/√2，消融后 h′=(0.5,−0.5)ᵀ。对 n=(1,0)ᵀ 同样操作得到 (0.5,−0.5)ᵀ，说明共用方向会同时影响正常信息。</p></noscript>
+          </div>
+          <p>论文 <cite>Refusal in Language Models Is Mediated by a Single Direction</cite> 报告了所研究模型中的拒绝相关方向与方向干预结果。它提供的是在特定模型、数据和设置下的实验证据，不能据此宣布所有模型的拒绝或安全机制都是单一方向。研究自己的模型时，需要区分方向提取、方向能否跨分布解码，以及干预后的行为与能力影响。</p>
+          <p class="note">完整投影矩阵满足 P²=P、Pᵀ=P，秩比原空间少 1。部分消融 α∈(0,1) 时一般不满足 Pα²=Pα；把它仍称为“正交投影”会掩盖留下了多少分量。干预的数学成立，不等于其语义解释成立。</p>
+          <details class="la-exercise"><summary>练习：两条候选安全方向不正交，能否直接用 I−u₁u₁ᵀ−u₂u₂ᵀ？</summary><p>一般不能把该式当作它们张成子空间的正交补投影。先用 QR/SVD 得到该子空间的正交基 Q，再用 I−QQᵀ；若 R 满列秩，也可写 I−R(RᵀR)⁻¹Rᵀ。重复或几乎共线方向应通过数值秩处理。删除多方向子空间时，正常能力损失仍需评估。</p></details>
+          <p class="source">低秩适配：<a href="https://arxiv.org/abs/2106.09685v2">LoRA: Low-Rank Adaptation of Large Language Models</a>；方向干预实证：<a href="https://arxiv.org/abs/2406.11717v1">Refusal in Language Models Is Mediated by a Single Direction</a>。</p>
+        </section>
+
+        <section id="cybersecurity">
+          <div class="section-head"><span class="number">13</span><div><h2>把网络安全问题翻译成线性代数问题</h2><p class="lede">翻译之后更容易检查假设；数学指标仍要落回攻击者、数据与操作后果。</p></div></div>
+          <p>考虑网络流量检测。每行是一条连接，每列是预先定义的统计特征；训练集拟合均值和协方差，然后用距离或线性模型给出分数。PCA 可以压缩或查看大规模变化，残差 <span class="la-symbol">x−QQᵀx</span> 可以衡量偏离主要子空间的量。正常流量里的稀有业务也可能残差大，攻击若沿常见方向变化也可能残差小。因此评价应采用按时间或来源隔离的测试集、误报成本和具体威胁模型。</p>
+          <div class="table-wrap"><table><thead><tr><th>安全任务</th><th>矩阵对象与计算</th><th>可支持的判断</th><th>必须补的证据</th></tr></thead><tbody><tr><td>流量异常调查</td><td>协方差、白化、子空间残差</td><td>偏离当前样本定义的常态</td><td>攻击标注、业务变化、基线误报率</td></tr><tr><td>行为或文本聚类</td><td>embedding 距离、PCA 可视化</td><td>某种表示中相近</td><td>任务标签、近邻污染、信息丢失</td></tr><tr><td>恶意样本检测</td><td>线性权重 w；margin=wᵀx+b</td><td>特征空间中与决策面的关系</td><td>攻击者是否能实现该特征变化</td></tr><tr><td>模型表征分析</td><td>probe、SVD、方向干预</td><td>可解码性、受控干预效果</td><td>因果对照、能力代价、模型与数据范围</td></tr></tbody></table></div>
+          <p>在线性二分类器里，决策边界是 <span class="la-symbol">wᵀx+b=0</span>。从边界一侧到平面的最短欧氏距离为 <span class="la-symbol">|wᵀx+b|/‖w‖₂</span>。若攻击者能在所有连续特征中任意移动，最短扰动沿 w；但网络包字段、字节序列或程序语义往往受离散和功能约束。几何最短扰动未必是可用攻击，需要把可实现集合写进问题。</p>
+          <div class="la-formula">合成检测器：w=(1,1)ᵀ，b=−3，x=(2,2)ᵀ
+margin=1；距边界=1/√2≈0.707
+到边界的最短扰动 δ=−(margin/‖w‖²)w=(−0.5,−0.5)ᵀ</div>
+          <p>图中的几何只给出到边界，不保证越界；严格翻转需再略微移动并说明符号约定。若第二特征不可改，只能沿第一坐标移动，这次要改变 1 才能到边界。加入功能保持约束后，攻击成本和方向都会改变。这个小例子说明报告“最小攻击距离”时，必须说清楚是在原始输入、特征还是隐藏表示中计算。</p>
+          <p class="note">密码学里也出现矩阵、秩、线性码和格，但运算可能发生在有限域或整数格中。实数域中的正交投影和欧氏最小二乘不能原样移植到有限域：例如 mod 2 下 1+1=0，几何长度的意义已经改变。本教程建立的是实数线性代数基础，后续学习这些领域要重新声明代数结构。</p>
+          <details class="la-exercise"><summary>练习：PCA 图上正常与攻击混在一起，能否说原始表示不可分？</summary><p>不能。二维投影可能删掉区分两类的低方差方向；原空间的线性或非线性可分性都不能仅由二维图否定。反过来，图上分开也可能由采集时间、来源或模板造成。应在独立测试数据上比较原始表示、投影表示和对照特征。</p></details>
+        </section>
+
+        <section id="agent">
+          <div class="section-head"><span class="number">14</span><div><h2>Agent 安全：信息进入模型，不等于获得行动权限</h2><p class="lede">线性代数能分析表示和计算路径；信任边界要在整个执行链上观察。</p></div></div>
+          <p>一个典型 agent 从用户目标开始，读取网页或仓库，再生成工具参数，执行文件读写或网络请求。间接 prompt injection 的问题出现在不可信内容进入模型上下文后，被当成可影响目标或行动的指令。网页文本和系统指令最终都参与模型计算，这没有给网页作者授权；同样，进入 attention 的内容并不因此变成可信输入。</p>
+          <figure class="figure"><div class="la-svg-scroll"><svg class="la-svg la-svg-wide" viewBox="0 0 740 280" role="img" aria-labelledby="agent-title"><title id="agent-title">用户授权与不可信外部内容共同进入模型，工具执行前由独立策略检查权限和参数</title><rect class="la-result" x="20" y="35" width="155" height="66" rx="6"/><text x="37" y="62">用户目标与授权</text><text x="37" y="83">允许的资源 / 动作</text><rect class="la-danger" x="20" y="160" width="155" height="70" rx="6"/><text x="37" y="188">外部网页 / 文件</text><text x="37" y="211">不可信内容</text><rect class="la-neutral" x="250" y="95" width="132" height="70" rx="6"/><text x="274" y="124">模型上下文</text><text x="274" y="146">生成工具调用</text><rect class="la-result" x="440" y="95" width="126" height="70" rx="6"/><text x="458" y="124">执行前检查</text><text x="458" y="146">策略 / 参数 / 权限</text><rect class="la-neutral" x="625" y="95" width="95" height="70" rx="6"/><text x="643" y="124">工具执行</text><text x="643" y="146">受限环境</text><path class="la-axis" d="M175 68L250 110 M175 195L250 145 M382 130H440 M566 130H625"/><text x="201" y="252">表示中的内容流动，与系统层的权限授予分别评估</text></svg></div><figcaption>这是研究用执行链示意，并非已验证的完整防御架构。外部策略与隔离可以约束动作范围，仍需处理策略覆盖、工具漏洞和允许动作内的误用。</figcaption></figure>
+          <p>教程中的 attention 控件解释“少量权重也可能有影响”，方向投影控件解释“移除可疑方向也可能伤及正常信息”。这些机制能帮助提出攻击或防御假设，但没有直接证明某篇注入文本能导致越权。真正的端到端成功条件应该是明确事件，例如是否读取禁止文件、是否向未授权地址发送数据、是否改变用户未要求的目标，而不是某个隐藏坐标升高。</p>
+          <p>可以把研究问题分成三层。第一层是表示：能否从激活区分外部指令、引用文本和合法用户目标？第二层是行为：对照干预能否改变模型遵循外部指令的概率，正常任务受损多少？第三层是执行：即使模型生成了不当动作，系统策略是否拒绝？同一方法可能在一层有效、另一层无效；实验表应分别记录。</p>
+          <div class="la-steps"><div class="la-step"><b>表示证据</b>冻结层与 token 位置，独立数据测试 probe。</div><div class="la-step"><b>行为证据</b>方向干预、随机方向和强度匹配对照。</div><div class="la-step"><b>执行证据</b>固定工具策略，核对真实授权边界事件。</div></div>
+          <p>模型层与系统层可以互补。方向检测器给出风险分数，执行层用可信配置验证文件路径、目的地址、动作类型和授权；沙箱限制执行后的可达资源。风险分数不是授权令牌，沙箱也不能让任意允许动作都符合用户意图。以最小权限构造无真实敏感数据的合成任务，可以把数学分析连接到可审计的实验结果。</p>
+          <p class="note">此处的防御组合是教程作者提出的研究拆分与实验建议。间接注入论文提供了攻击场景与实证；它没有证明教程中的投影、协方差或 attention 演示能检测或阻止这些攻击。</p>
+          <details class="la-exercise"><summary>练习：某方法让“注入方向”分数下降 80%，能否报告攻击成功率下降 80%？</summary><p>不能。隐藏分数与实际成功事件是不同指标，关系还可能因干预而改变。需要在相同威胁模型和独立任务集上测量攻击成功率、正常任务完成率与权限事件，并报告样本量、不确定性和失败案例。80% 只是题目给出的假设数字，不是本教程实验结果。</p></details>
+          <p class="source">间接注入场景与原始实证：<a href="https://arxiv.org/abs/2302.12173v1">More than you've asked for（v1）</a>。引用固定版本时采用该版本题名。</p>
+        </section>
+
+        <section id="practice">
+          <div class="section-head"><span class="number">15</span><div><h2>从会算到会研究：每一步都留下可检查的证据</h2><p class="lede">先手算二维与三维，再用 NumPy 验证，最后把假设带进受控的模型实验。</p></div></div>
+          <p>复习的目标是能从公式预测一个可观察变化，而不只是认出名词。每个阶段都问四件事：张量在哪里、形状是什么、操作保留或丢失什么、哪些结论依赖假设。先用小数例检查符号，再用代码对随机数据验证恒等式，最后换成研究数据。不要跳过中心化、划分和单位这些“琐事”，它们经常比复杂公式更决定结论。</p>
+          <div class="table-wrap"><table><thead><tr><th>学习阶段</th><th>应该能独立完成</th><th>检查方式</th></tr></thead><tbody><tr><td>向量到秩</td><td>写出矩阵列的含义；找零空间；判断有解与唯一性</td><td>手算 2×2 和贯穿 3×2 例子；改变一个输入方向</td></tr><tr><td>投影到 SVD</td><td>推导正规方程；解释残差正交；计算截断误差</td><td>比较 QR/SVD 解；核对 Aᵀr≈0、奇异值与条件数</td></tr><tr><td>统计到梯度</td><td>中心化/PCA；解释 Mahalanobis；推导 Wᵀg</td><td>训练集拟合统计量；有限差分检查梯度</td></tr><tr><td>LLM 与安全</td><td>跟踪 Q/K/V 形状；区分权重更新与激活干预</td><td>同范数随机方向；正常任务对照；执行边界事件</td></tr></tbody></table></div>
+          <h3>一段可复算的 NumPy 小实验</h3>
+          <p>完整配套脚本包含六组 NumPy 教学实验与数值断言，可<a href="assets/20261012/linear_algebra_lab.py" download>下载 linear_algebra_lab.py</a>，按脚本说明本地运行。它扩展下面的最小二乘例子，仍使用合成数据，不连接真实 LLM 或网络环境。</p>
+          <pre class="code">import numpy as np
+
+A = np.array([[1., 0.], [1., 1.], [0., 1.]])
+b = np.array([1., 2., 2.])
+x, _, rank, s = np.linalg.lstsq(A, b, rcond=None)
+r = b - A @ x
+U, sigma, Vt = np.linalg.svd(A, full_matrices=False)
+A1 = sigma[0] * np.outer(U[:, 0], Vt[0])
+print(x)                       # [0.66666667, 1.66666667]
+print(A.T @ r)                 # 近似 [0., 0.]，浮点误差允许小偏差
+print(rank, s)                 # 2；[sqrt(3), 1]
+print(np.linalg.norm(A-A1))     # 默认矩阵 Frobenius 范数：1
+print(sigma[0] / sigma[-1])     # sqrt(3)</pre>
+          <p>可选扩展：为 A 加上逐渐变小的奇异方向，比较直接正规方程与 SVD 求解的误差；向样本加入重复特征，观察协方差秩；建立合成线性分类器，区分到边界的距离和功能约束下的可实现扰动。每次只改变一个条件，记录数据生成方式、随机种子、精度与阈值。代码输出是可预期的小例子，教程页面没有在浏览器训练模型。</p>
+          <h3>连接到自己的 Agent 安全课题</h3>
+          <p>选择一个开放权重模型和无真实敏感信息的 agent 任务。保存层、token 位置和激活提取方式，先问外部恶意指令是否线性可分。训练/测试按文档、任务和攻击模板分组，避免同源泄漏。若做方向干预，对比原模型、同范数随机方向、与候选方向正交的方向和不同强度；同时测量正常任务完成与禁止动作事件。若信号只在固定模板有效，结论就应停在该模板范围。</p>
+          <p>更深入的数学路线可以沿三条分支选择：数值线性代数学习 QR、稳定性和迭代法；统计学习学习协方差估计、核方法和随机矩阵；模型机制学习张量、自动微分、表示几何与干预实验。选哪一支由当前问题决定，不需要先把所有数学学完才开始研究。</p>
+          <details class="la-exercise"><summary>综合练习：为什么低维线性 probe 成功，仍需要随机方向干预作为对照？</summary><p>probe 只证明预测相关性。随意改变激活也可能损伤模型，导致拒绝或工具调用普遍减少；若候选方向与同范数随机方向效果相同，不能把变化归因于特定安全信号。应比较目标行为、正常能力和强度曲线，必要时做置换标签、位置匹配和跨模板测试。</p></details>
+        </section>
+
+        <section id="sources">
+          <div class="section-head"><span class="number">16</span><div><h2>来源、模拟范围与进一步阅读</h2><p class="lede">数学结论、论文实验和教程推演分开核对。</p></div></div>
+          <p>本教程围绕 2026-10-12 核验的基础公式、原始机制与所引论文组织，不声称覆盖此日全部最新模型与安全研究。六个交互实验全部使用手工构造的二维矩阵、向量或合成协方差；attention 实验固定 Q/K 并改 V，方向实验使用读者指定的 u。页面没有接入真实模型、流量数据或攻击环境，图与数值不应被引用为模型实测性能。</p>
+          <ol class="la-reading-list"><li><a href="https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/">MIT 18.06 Linear Algebra</a>：向量空间、四个基本子空间、投影、特征值和 SVD。适合重新建立几何与消元之间的连接。</li><li><a href="https://mml-book.github.io/">Mathematics for Machine Learning</a>：第 2–5 章连接线性代数、解析几何、矩阵分解与向量微积分；PCA 的统计解释也可沿相关章节继续。</li><li><a href="https://arxiv.org/abs/1706.03762v7">Attention Is All You Need</a>：核对 scaled dot-product attention、多头拼接与原始 Transformer 结构。教程使用基础机制，不把 2017 年配置等同于所有当前 LLM。</li><li><a href="https://arxiv.org/abs/1910.07467v1">Root Mean Square Layer Normalization</a>：核对 RMSNorm 的均方根缩放与 LayerNorm 的差别。具体模型仍需检查自身实现和参数。</li><li><a href="https://arxiv.org/abs/2106.09685v2">LoRA: Low-Rank Adaptation of Large Language Models</a>：核对低秩权重更新、基础权重冻结和参数化；不据低秩推断安全性。</li><li><a href="https://arxiv.org/abs/2406.11717v1">Refusal in Language Models Is Mediated by a Single Direction</a>：方向提取与干预的论文实证。阅读时重点辨认模型集合、层/位置、数据和行为判定。</li><li><a href="https://arxiv.org/abs/2302.12173v1">More than you've asked for（v1）</a>：间接 prompt injection 的场景与攻击证据。教程提出的表示分析与执行层拆分是研究组织建议，未报告防御实验。</li></ol>
+          <p>现代结构补充来源为 <a href="https://arxiv.org/abs/2104.09864v5">RoFormer v5</a> 的位置旋转公式，以及 <a href="https://arxiv.org/abs/2407.21783v1">Llama 3 v1</a> 的结构描述。它们说明基础运算在较新模型中的具体落点，不能代替逐模型的实现核对。</p>
+          <p>如果独立打开本 HTML，正文、默认图示与交互计算均在文件内。外部链接仅用于进一步核对；网站导航需要完整发布目录。配套深度报告给出更连续的推导、符号表和练习，交互页则用变化中的图形帮助检查直觉。</p>
+          <details class="la-exercise"><summary>最后自检：看到一个新的安全论文，你现在能追问什么？</summary><p>它操作的是输入、权重、激活还是执行权限？每个矩阵形状是否一致？度量受什么缩放影响？所谓低秩是权重、更新还是数据？可解码性是否被误当成因果机制？攻击者的可实现集合是什么？评估是否按来源隔离，是否同时报告正常任务能力？这些问题把线性代数变成可用的研究判断工具。</p></details>
+        </section>
+      </div>
+    </main>
+  </div>
+  <!-- archive:footer:start -->
+<footer class="site-footer archive-footer">
+  <div class="footer-inner archive-footer-inner">
+    <span class="footer-copy">ai-for-exploration <span class="footer-dot">/</span> 持续探索，保留来路</span>
+    <a href="https://github.com/brant-ruan/ai-for-exploration">源文件与修订记录 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div>
+</footer>
+<!-- archive:footer:end -->
+  <script id="linear-algebra-interactions">
+    (() => {
+      'use strict';
+      let printAnswers = null;
+      window.addEventListener('beforeprint', () => {
+        if (printAnswers) return;
+        printAnswers = Array.from(document.querySelectorAll('details.la-exercise'), node => [node, node.open]);
+        printAnswers.forEach(([node]) => { node.open = true; });
+      });
+      window.addEventListener('afterprint', () => {
+        if (!printAnswers) return;
+        printAnswers.forEach(([node, wasOpen]) => { node.open = wasOpen; });
+        printAnswers = null;
+      });
+      const byId = id => document.getElementById(id);
+      const prior = new Map();
+      const fmt = value => {
+        const clean = Math.abs(value) < 0.0005 ? 0 : value;
+        return clean.toFixed(3);
+      };
+      const num = (id, fallback) => {
+        const node = byId(id);
+        const raw = node.value.trim();
+        let value = raw === '' ? NaN : Number(raw);
+        if (!Number.isFinite(value)) return prior.has(id) ? prior.get(id) : fallback;
+        if (node.min !== '') value = Math.max(Number(node.min), value);
+        if (node.max !== '') value = Math.min(Number(node.max), value);
+        prior.set(id, value);
+        return value;
+      };
+      const set = (id, value) => { byId(id).value = String(value); prior.set(id, value); };
+      const path = (a,b,origin,scale,cls) => {
+        const x1 = origin[0]+a[0]*scale, y1=origin[1]-a[1]*scale;
+        const x2 = origin[0]+b[0]*scale, y2=origin[1]-b[1]*scale;
+        return `<path d="M${x1} ${y1}L${x2} ${y2}" class="${cls}"/>`;
+      };
+      const point = (p,origin,scale,cls) => `<circle cx="${origin[0]+p[0]*scale}" cy="${origin[1]-p[1]*scale}" r="5" class="${cls}"/>`;
+      const listen = (ids, update) => ids.forEach(id => byId(id).addEventListener('input',update));
+      document.querySelectorAll('.la-controls input,.la-controls select,.la-controls button').forEach(node => { node.disabled=false; });
+      document.querySelectorAll('.la-controls input[type="number"]').forEach(node => {
+        prior.set(node.id,Number(node.value));
+        node.addEventListener('blur',() => { node.value=String(num(node.id,0)); });
+      });
+
+      const matrixIds=['mat-a','mat-b','mat-c','mat-d','mat-x','mat-y'];
+      function updateMatrix() {
+        const [a,b,c,d,x,y]=matrixIds.map((id,i)=>num(id,[1,1,0,1,1,1][i]));
+        const out=[a*x+b*y,c*x+d*y];
+        const maxEntry=Math.max(Math.abs(a),Math.abs(b),Math.abs(c),Math.abs(d));
+        const det=a*d-b*c, tol=1e-10*Math.max(1,maxEntry*maxEntry);
+        const rank=maxEntry<1e-10?0:(Math.abs(det)>tol?2:1);
+        const bound=Math.max(2,2*(Math.abs(a)+Math.abs(b)),2*(Math.abs(c)+Math.abs(d)),Math.abs(out[0]),Math.abs(out[1]));
+        const scale=Math.min(45,135/bound), origin=[260,170];
+        const transform=p=>[a*p[0]+b*p[1],c*p[0]+d*p[1]];
+        let oldGrid='',newGrid='';
+        for(let i=-2;i<=2;i++) {
+          oldGrid+=path([i,-2],[i,2],origin,scale,'la-grid')+path([-2,i],[2,i],origin,scale,'la-grid');
+          newGrid+=path(transform([i,-2]),transform([i,2]),origin,scale,'la-result')+path(transform([-2,i]),transform([2,i]),origin,scale,'la-result');
+        }
+        byId('matrix-original').innerHTML=oldGrid;
+        byId('matrix-grid').innerHTML=newGrid;
+        const corners=[[0,0],[a,c],[a+b,c+d],[b,d]].map(p=>`${origin[0]+scale*p[0]},${origin[1]-scale*p[1]}`).join(' ');
+        byId('matrix-shape').innerHTML=`<polygon points="${corners}" class="la-result" opacity=".4"/>`+path([0,0],[a,c],origin,scale,'la-input la-arrow')+path([0,0],[b,d],origin,scale,'la-result la-arrow')+path([0,0],out,origin,scale,'la-danger la-arrow')+point(out,origin,scale,'la-danger');
+        const direction=det<0?'定向翻转。':det>0?'定向保留。':'面积塌缩。';
+        byId('matrix-output').textContent=`Ax=(${fmt(out[0])}, ${fmt(out[1])})ᵀ；det=${fmt(det)}；rank=${rank}\n单位面积变为 ${fmt(Math.abs(det))}；输入零空间维数=${2-rank}。${direction}`;
+        byId('mat-title').textContent=`当前矩阵的秩为 ${rank}，行列式为 ${fmt(det)}，输入映到 ${fmt(out[0])}、${fmt(out[1])}`;
+      }
+      const presets={shear:[1,1,0,1],rotate:[0,-1,1,0],singular:[1,2,0.5,1],zero:[0,0,0,0],reflect:[-1,0,0,2]};
+      byId('matrix-preset').addEventListener('change',()=>{ presets[byId('matrix-preset').value].forEach((v,i)=>set(matrixIds[i],v)); updateMatrix(); });
+      byId('matrix-reset').addEventListener('click',()=>{ [1,1,0,1,1,1].forEach((v,i)=>set(matrixIds[i],v)); byId('matrix-preset').value='shear'; updateMatrix(); });
+      listen(matrixIds,updateMatrix); updateMatrix();
+
+      function updateProjection() {
+        const b1=num('proj-b1',2),b2=num('proj-b2',1),lambda=num('ridge-lambda',0);
+        const coef=(b1+b2)/(2+lambda), prediction=[coef,coef], residual=[b1-coef,b2-coef];
+        const origin=[260,170],scale=Math.min(50,125/Math.max(1,Math.abs(b1),Math.abs(b2),Math.abs(coef)));
+        byId('projection-svg').querySelector('.la-axis').setAttribute('d','M35 170H490 M260 305V25');
+        byId('projection-svg').querySelector('path.la-result.la-dash').setAttribute('d','M120 310L400 30');
+        byId('projection-shape').innerHTML=path([0,0],[b1,b2],origin,scale,'la-input la-arrow')+path([0,0],prediction,origin,scale,'la-result la-arrow')+path(prediction,[b1,b2],origin,scale,'la-danger la-dash la-arrow')+point([b1,b2],origin,scale,'la-input')+point(prediction,origin,scale,'la-result');
+        byId('projection-output').textContent=`λ=${fmt(lambda)}；c=(b₁+b₂)/(2+λ)=${fmt(coef)}\n预测=(${fmt(coef)}, ${fmt(coef)})ᵀ；残差=(${fmt(residual[0])}, ${fmt(residual[1])})ᵀ\naᵀ残差=${fmt(residual[0]+residual[1])}；‖残差‖₂=${fmt(Math.hypot(...residual))}`;
+        byId('proj-title').textContent=`岭回归惩罚为 ${fmt(lambda)}，预测为 ${fmt(coef)}、${fmt(coef)}，残差与方向的点积为 ${fmt(residual[0]+residual[1])}`;
+      }
+      listen(['proj-b1','proj-b2','ridge-lambda'],updateProjection);
+      byId('projection-reset').addEventListener('click',()=>{set('proj-b1',2);set('proj-b2',1);set('ridge-lambda',0);updateProjection();}); updateProjection();
+
+      function updateSvd() {
+        const sigma2=num('svd-second',1),keep=Number(byId('svd-rank').value),rank=sigma2>1e-10?2:1;
+        const error=keep===1?sigma2:0,energy=keep===1?9/(9+sigma2*sigma2):1;
+        const theta=Math.PI/6,phi=-Math.PI/9,c=Math.cos(theta),s=Math.sin(theta),cv=Math.cos(phi),sv=Math.sin(phi);
+        const matrix=[3*c*cv+s*sigma2*sv,3*c*sv-s*sigma2*cv,3*s*cv-c*sigma2*sv,3*s*sv+c*sigma2*cv];
+        const full=sigma2>0?`<ellipse rx="135" ry="${45*sigma2}" class="la-input" fill-opacity=".4"/>`:'<path d="M-135 0H135" class="la-input la-arrow"/>';
+        const approx=keep===1||sigma2===0?'<path d="M-135 0H135" class="la-result la-arrow"/>':`<ellipse rx="135" ry="${45*sigma2}" class="la-result" fill="none" stroke-width="3"/>`;
+        byId('svd-shape').innerHTML=full+approx+`<path d="M0 ${-45*sigma2}V${45*sigma2}" class="la-input la-dash"/>`;
+        byId('svd-output').textContent=`σ₁=3.000，σ₂=${fmt(sigma2)}；保留 ${keep} 项\n相对平方 Frobenius 能量=${(100*energy).toFixed(1)}%；‖A−Aₖ‖F=${fmt(error)}；‖A−Aₖ‖₂=${fmt(error)}\nκ₂(A)=${sigma2>0?fmt(3/sigma2):'∞（奇异）'}；完整秩=${rank}；近似秩=${keep===1?1:rank}\nA=[${fmt(matrix[0])} ${fmt(matrix[1])}; ${fmt(matrix[2])} ${fmt(matrix[3])}]`;
+        byId('svd-title').textContent=`奇异值为三和 ${fmt(sigma2)}，保留 ${keep} 项，截断误差为 ${fmt(error)}`;
+      }
+      listen(['svd-second','svd-rank'],updateSvd);
+      byId('svd-reset').addEventListener('click',()=>{set('svd-second',1);byId('svd-rank').value='1';updateSvd();}); updateSvd();
+
+      function updateMahal() {
+        const x=num('mahal-x',3),y=num('mahal-y',0),euclidean=Math.hypot(x,y),mahal=Math.sqrt(x*x/9+y*y),origin=[260,165],scale=35;
+        byId('mahal-point').innerHTML=path([0,0],[x,y],origin,scale,'la-danger la-arrow')+point([x,y],origin,scale,'la-danger');
+        byId('mahal-output').textContent=`x=(${fmt(x)},${fmt(y)})ᵀ；dE=${fmt(euclidean)}；dM=${fmt(mahal)}\n阈值 dM>2：${mahal>2+1e-10?'超出':'未超出'}。此阈值只是演示选择，不是检测器实测阈值。`;
+        byId('mahal-title').textContent=`当前点的欧氏距离为 ${fmt(euclidean)}，Mahalanobis 距离为 ${fmt(mahal)}`;
+      }
+      listen(['mahal-x','mahal-y'],updateMahal);
+      byId('mahal-short').addEventListener('click',()=>{set('mahal-x',0);set('mahal-y',2);updateMahal();});
+      byId('mahal-reset').addEventListener('click',()=>{set('mahal-x',3);set('mahal-y',0);updateMahal();}); updateMahal();
+
+      function updateAttention() {
+        const temperature=num('att-temperature',1),delta=num('att-delta',0),scores=[2,1,0];
+        const exp=scores.map(s=>Math.exp((s-2)/temperature)),den=exp.reduce((a,b)=>a+b,0),p=exp.map(v=>v/den);
+        const baseline=p[0]-p[2],change=p[2]*delta,output=[baseline+change,p[1]];
+        byId('attention-bars').innerHTML=p.map((weight,i)=>{ const width=350*weight,y=51+55*i,cls=['la-input','la-result','la-danger'][i];return `<rect x="160" y="${y}" width="${width}" height="32" class="${cls}"/><text x="${170+width}" y="${y+23}">${fmt(weight)}</text>`;}).join('');
+        byId('attention-output').textContent=`τ=${fmt(temperature)}；p=(${p.map(fmt).join(',')})；Δ=${fmt(delta)}\no=(${output.map(fmt).join(',')})；相对同温度 Δ=0 的变化=(${fmt(change)},0.000)\n输出变化范数=${fmt(Math.abs(change))}；固定 p 时，变化精确等于 p₃Δ。`;
+        byId('att-title').textContent=`温度为 ${fmt(temperature)}，三个权重为 ${p.map(fmt).join('、')}，只改变第三个 Value 后输出变化为 ${fmt(change)}`;
+      }
+      listen(['att-temperature','att-delta'],updateAttention);
+      byId('attention-reset').addEventListener('click',()=>{set('att-temperature',1);set('att-delta',0);updateAttention();}); updateAttention();
+
+      function updateIntervention() {
+        const mode=byId('intervention-mode').value,angle=num('intervention-angle',45)*Math.PI/180,alpha=num('intervention-alpha',1),beta=num('intervention-beta',1);
+        const r=[Math.cos(angle),Math.sin(angle)],h=[2,1],score=h[0]*r[0]+h[1]*r[1];
+        const amount=mode==='remove'?-alpha*score:beta,edited=[h[0]+amount*r[0],h[1]+amount*r[1]],after=edited[0]*r[0]+edited[1]*r[1];
+        const origin=[230,185],bound=Math.max(2,...edited.map(Math.abs)),scale=Math.min(45,130/bound);
+        byId('intervention-svg').querySelector('.la-axis').setAttribute('d','M30 185H490 M230 305V25');
+        byId('intervention-shape').innerHTML=path(r.map(v=>-3*v),r.map(v=>3*v),origin,scale,'la-neutral la-dash')+path([0,0],h,origin,scale,'la-input la-arrow')+path([0,0],edited,origin,scale,'la-result la-arrow')+path(edited,h,origin,scale,'la-danger la-dash')+point(h,origin,scale,'la-input')+point(edited,origin,scale,'la-result');
+        byId('intervention-alpha').disabled=mode!=='remove'; byId('intervention-beta').disabled=mode!=='steer';
+        let normal;
+        if(mode==='remove') {
+          const n=[1-alpha*r[0]*r[0],-alpha*r[0]*r[1]],energy=n[0]*n[0]+n[1]*n[1];
+          normal=`同样消融正常参考 n 后：‖n′‖₂=${fmt(Math.sqrt(energy))}，保留平方范数=${(100*energy).toFixed(1)}%。`;
+        } else normal=`同样给正常参考 n 注入后，其位移范数也为 ${fmt(Math.abs(beta))}；注入不保证保持正常信息。`;
+        byId('intervention-output').textContent=`操作=${mode==='remove'?'消融 α='+fmt(alpha):'注入 β='+fmt(beta)}；u=(${r.map(fmt).join(',')})ᵀ\nh′=(${edited.map(fmt).join(',')})ᵀ；uᵀh=${fmt(score)}；uᵀh′=${fmt(after)}\n‖h′−h‖₂=${fmt(Math.abs(amount))}\n${normal}`;
+        byId('intervene-title').textContent=`沿方向 ${r.map(fmt).join('、')} ${mode==='remove'?'消融':'注入'}后，表示为 ${edited.map(fmt).join('、')}`;
+      }
+      listen(['intervention-mode','intervention-angle','intervention-alpha','intervention-beta'],updateIntervention);
+      byId('intervention-reset').addEventListener('click',()=>{byId('intervention-mode').value='remove';set('intervention-angle',45);set('intervention-alpha',1);set('intervention-beta',1);updateIntervention();}); updateIntervention();
+    })();
+  </script>
+  <!-- archive:navigation-script:start -->
+<script data-archive-navigation>
+// Shared enhancement for the static, numbered topic directory.
+(() => {
+  const links = Array.from(document.querySelectorAll('.sidebar nav a[href^="#"]'));
+  const entries = links.map(link => {
+    try { return { link, section: document.getElementById(decodeURIComponent(link.hash.slice(1))) }; }
+    catch { return { link, section: null }; }
+  }).filter(entry => entry.section);
+  if (!entries.length) return;
+  function setCurrent(current) {
+    entries.forEach(entry => {
+      const selected = entry === current;
+      entry.link.classList.toggle('current', selected);
+      if (selected) entry.link.setAttribute('aria-current', 'location');
+      else entry.link.removeAttribute('aria-current');
+    });
+  }
+  function update() {
+    const header = document.querySelector('.archive-header');
+    const offset = (header ? header.getBoundingClientRect().height : 0) + 36;
+    let current = entries[0];
+    for (const entry of entries) {
+      // Native anchor positioning can round a fractional CSS pixel upward.
+      if (entry.section.getBoundingClientRect().top <= offset + 1) current = entry;
+      else break;
+    }
+    if (window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = entries.at(-1);
+    setCurrent(current);
+  }
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; update(); });
+  }
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('hashchange', schedule);
+  window.addEventListener('load', update, { once: true });
+  document.querySelectorAll('[data-archive-print]').forEach(button => {
+    button.disabled = false;
+    button.addEventListener('click', () => window.print());
+  });
+  update();
+})();
+</script>
+<!-- archive:navigation-script:end -->
+</body>
+</html>

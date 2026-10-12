@@ -8,6 +8,25 @@
   },
   "topics": [
     {
+      "slug": "exploration-linear-algebra",
+      "title": "线性代数：从几何直觉到 LLM 与 Agent 安全",
+      "subtitle": "重建基础，理解模型，分析安全边界",
+      "kind": "exploration",
+      "created": "2026-10-12",
+      "updated": "2026-10-12",
+      "summary": "从向量、线性变换、子空间和投影出发，逐步学习特征分解、SVD、PCA 与矩阵求导，再连接 Transformer、LoRA、表示干预、日志异常检测与 Agent 信任边界，配合图示、交互、手算练习和可运行实验。",
+      "tags": ["线性代数", "LLM", "AI Agents", "网络安全", "教程"],
+      "markdown": "exploration-linear-algebra-latest.md",
+      "html": "exploration-linear-algebra-latest.html",
+      "assets": [
+        "assets/20261012/vector-transform.svg",
+        "assets/20261012/orthogonal-projection.svg",
+        "assets/20261012/agent-control-flow.svg",
+        "assets/20261012/linear_algebra_lab.py"
+      ],
+      "history": []
+    },
+    {
       "slug": "investigation-agent-sandboxing",
       "title": "Agent Sandboxing",
       "subtitle": "从容器隔离到受控执行平台",

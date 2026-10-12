@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-labelledby="title desc">
+<title id="title">矩阵把标准基和向量一起变换</title><desc id="desc">左侧标准基 e1 和 e2 组成单位正方形，向量 x 等于两基之和。右侧剪切矩阵 A 将 e1 保持为一零、e2 变为一一，因此 Ax 等于二一。坐标比例在两侧相同。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="context-stroke"/></marker></defs>
+<rect width="960" height="400" rx="12" fill="#fff"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif" fill="#172f44">
+<text x="36" y="42" font-size="23" font-weight="600">看列向量，就能看见变换</text>
+<text x="36" y="74" font-size="15" fill="#627280">A = [[1, 1], [0, 1]] · x = (1, 1)ᵀ · Ax = (2, 1)ᵀ</text>
+<g stroke="#edf1f4" stroke-width="1"><path d="M80 130V340M160 130V340M240 130V340M320 130V340M400 130V340M80 140H400M80 220H400M80 300H400"/><path d="M560 130V340M640 130V340M720 130V340M800 130V340M880 130V340M560 140H880M560 220H880M560 300H880"/></g>
+<g stroke="#a3b1bd" stroke-width="1.5" marker-end="url(#arrow)"><path d="M80 300H414"/><path d="M80 340V118"/><path d="M560 300H894"/><path d="M560 340V118"/></g>
+<polygon points="80,300 160,300 160,220 80,220" fill="#eaf2ef" stroke="#8db2ad"/>
+<polygon points="560,300 640,300 720,220 640,220" fill="#eaf2ef" stroke="#8db2ad"/>
+<g fill="none" stroke-width="3" marker-end="url(#arrow)">
+<path d="M80 300H160" stroke="#286a66"/><path d="M80 300V220" stroke="#2b617f"/><path d="M80 300L160 220" stroke="#946730"/>
+<path d="M560 300H640" stroke="#286a66"/><path d="M560 300L640 220" stroke="#2b617f"/><path d="M560 300L720 220" stroke="#946730"/>
+</g>
+<text x="124" y="326" font-size="17" fill="#286a66">e₁</text><text x="47" y="222" font-size="17" fill="#2b617f">e₂</text><text x="165" y="206" font-size="17" fill="#946730">x = e₁ + e₂</text>
+<text x="602" y="326" font-size="17" fill="#286a66">Ae₁</text><text x="580" y="205" font-size="17" fill="#2b617f">Ae₂</text><text x="728" y="210" font-size="17" fill="#946730">Ax</text>
+<path d="M436 241H518" stroke="#627280" stroke-width="2" marker-end="url(#arrow)"/><text x="457" y="226" font-size="19">A</text>
+<text x="36" y="377" font-size="16">线性性：先组合再变换 = 先变换每个基，再用相同系数组合。剪切保持面积，但不保持角度。</text>
+</g></svg>

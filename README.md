@@ -10,6 +10,7 @@
 
 | 主题 | 创建日期 | 更新日期 | 资料 |
 | --- | --- | --- | --- |
+| [线性代数：从几何直觉到 LLM 与 Agent 安全](https://exp.wohin.me/exploration-linear-algebra/report/)：重建基础，理解模型，分析安全边界 | 2026-10-12 | 2026-10-12 | [Markdown](exploration-linear-algebra/exploration-linear-algebra-latest.md) · [交互讲解](https://exp.wohin.me/exploration-linear-algebra/exploration-linear-algebra-latest.html) |
 | [Agent Sandboxing](https://exp.wohin.me/investigation-agent-sandboxing/report/)：从容器隔离到受控执行平台 | 2026-10-11 | 2026-10-11 | [Markdown](investigation-agent-sandboxing/investigation-agent-sandboxing-latest.md) · [交互讲解](https://exp.wohin.me/investigation-agent-sandboxing/investigation-agent-sandboxing-latest.html) |
 | [大语言模型时代的网络安全创业](https://exp.wohin.me/investigation-ai-security-startups/report/)：团队、产品控制点与融资发展图谱 | 2026-10-11 | 2026-10-11 | [Markdown](investigation-ai-security-startups/investigation-ai-security-startups-latest.md) · [交互讲解](https://exp.wohin.me/investigation-ai-security-startups/investigation-ai-security-startups-latest.html) |
 
